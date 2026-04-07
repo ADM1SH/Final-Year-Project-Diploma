@@ -37,4 +37,3 @@ Existing secondhand marketplaces in Malaysia (e.g., Carousell, Mudah.my, Faceboo
 
 ---
 *This project is submitted to the Faculty of Computing and Informatics, Multimedia University.*
-# Final-Year-Project-Diploma
