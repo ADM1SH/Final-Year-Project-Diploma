@@ -11,20 +11,31 @@
 
 ## 2. Conversation & Decision Log
 
-### [2026-04-13] Interaction: Server Verification
-- **Status:** User successfully ran the server and verified the default Django landing page.
-- **Action:** Explained that the "rocket page" is normal when no root URL is defined.
+### [2026-04-13] Interaction: API Implementation
+- **Action:** Implemented full REST API using Django REST Framework (DRF).
+- **Work Performed:**
+  - Configured `corsheaders` for cross-platform (Android) access.
+  - Created `api/serializers.py` for all models.
+  - Implemented `api/views.py` using DRF `viewsets`.
+  - Defined API routing in `api/urls.py` and `core/urls.py`.
+- **Status:** All core CRUD endpoints are live. (Git: Models committed, API code pending commit/push).
+- **Next Steps (Enhancements):**
+  1. Add `image` field to `Item` model (Critical for marketplace).
+  2. Implement Token Authentication for mobile login.
+  3. Add Search/Filter capabilities.
+  4. Build the "Grading Calculator" logic.
 
 ## 3. Current Project State
-- **Backend:** Django 6.0.3 (Running successfully).
-- **Documentation:**
-  - `README.md`: Updated with cross-platform setup guide.
-  - `requirements.txt`: Created.
-  - **Literature Review:** Drafted (stored in session history/AI_CONTEXT.md notes).
+- **Backend:** Django 6.0.3 with Django REST Framework.
+- **API Endpoints:**
+  - `/api/categories/`
+  - `/api/items/`
+  - `/api/profiles/`
+  - `/api/reviews/`
 - **Features Implemented:**
   - User Profiles with Trust Scores.
   - Item Grading System (Grades A-D).
-  - Category and Review systems.
+  - Full CRUD REST API for all models.
 
 ## 4. Proposed Next Steps (Awaiting Selection)
 1. **API Development:** Implement Django REST Framework Serializers and Views for CRUD operations.
