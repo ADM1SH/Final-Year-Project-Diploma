@@ -23,6 +23,14 @@ staticfiles/
 .env
 .venv
 
+# AI Context (Committed to Repo)
+# AI_CONTEXT.md
+
+# Screenshots & Misc
+*.png
+*.jpg
+*.jpeg
+
 # OS
 .DS_Store
 Thumbs.db
