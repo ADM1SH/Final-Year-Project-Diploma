@@ -37,3 +37,57 @@ Existing secondhand marketplaces in Malaysia (e.g., Carousell, Mudah.my, Faceboo
 
 ---
 *This project is submitted to the Faculty of Computing and Informatics, Multimedia University.*
+# Final-Year-Project-Diploma
+
+## Local Setup and Run Instructions
+
+To run this project locally, follow these steps:
+
+### 1. Prerequisites
+- Python 3.10 or higher installed on your system.
+- `git` installed.
+
+### 2. Clone the Repository
+```bash
+git clone https://github.com/adam-anwar/Final-Year-Project-Diploma.git
+cd Final-Year-Project-Diploma
+```
+
+### 3. Set Up Virtual Environment
+Create and activate a virtual environment to manage dependencies:
+- **macOS/Linux:**
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+- **Windows:**
+  ```bash
+  python -m venv venv
+  venv\Scripts\activate
+  ```
+
+### 4. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 5. Run Migrations
+Set up the database:
+```bash
+python manage.py migrate
+```
+
+### 6. Create Superuser (Optional)
+If you need to access the Django admin panel:
+```bash
+python manage.py createsuperuser
+```
+
+### 7. Run the Development Server
+```bash
+python manage.py runserver
+```
+The server will be available at `http://127.0.0.1:8000/`.
+
+### 8. Access Admin Panel
+Visit `http://127.0.0.1:8000/admin/` and log in with your superuser credentials.
