@@ -89,5 +89,34 @@ python manage.py runserver
 ```
 The server will be available at `http://127.0.0.1:8000/`.
 
-### 8. Access Admin Panel
-Visit `http://127.0.0.1:8000/admin/` and log in with your superuser credentials.
+
+## Project Progress & Implemented Features
+
+### 1. Project Infrastructure & Setup
+*   **Django Framework Setup:** The core project structure is established with a `core` configuration directory and an `api` application.
+*   **REST API Integration:** Django REST Framework (DRF) is installed and configured to handle API requests.
+*   **CORS Configuration:** `django-cors-headers` is configured to allow the Android mobile app to connect to the backend during development.
+*   **Dependencies:** A `requirements.txt` file is present, including essential packages like `Django`, `djangorestframework`, `pillow` (for image handling), and `django-cors-headers`.
+
+### 2. Database Models (The "Backbone")
+The following data structures have been created in `api/models.py`:
+*   **User Profiles:** Extends the default Django User system to include `trust_score`, `is_verified` status, and `profile_picture`.
+*   **Categories:** A system to classify items (e.g., Electronics, Clothing) with support for Android icon names.
+*   **Item Grading System:** An `Item` model that includes a standardized grading system (`Grade A` to `Grade D`) to track the condition of secondhand goods.
+*   **Review & Rating System:** A model to allow users to rate and review sellers, which feeds into the trust score mechanism.
+
+### 3. API Functionality
+*   **Serializers:** Standardized ways to convert database models into JSON format for the mobile app to read.
+*   **ViewSets:** Fully functional CRUD (Create, Read, Update, Delete) endpoints for:
+    *   `categories/`
+    *   `items/`
+    *   `profiles/`
+    *   `reviews/`
+*   **Automatic Logic:** The `ItemViewSet` is set up to automatically associate a newly listed item with the user who is currently logged in.
+
+### 4. Documentation & Setup Guides
+*   **Project Overview:** A comprehensive `README.md` explaining the "MyPreLove" concept, the problem statement (fraud/scams), and the team members.
+*   **Local Setup Instructions:** Clear steps for cloning the repo, setting up a virtual environment, installing dependencies, and running the development server.
+
+### 5. Database Migrations
+*   **Database Schema:** The initial database schema has been generated and applied through Django migrations (found in `api/migrations/`).

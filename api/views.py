@@ -11,7 +11,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-    
+
     def perform_create(self, serializer):
         # Automatically set the seller to the current user
         # During dev with AllowAny, you might want to handle this differently
