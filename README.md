@@ -1,122 +1,87 @@
-# MyPreLove: Secondhand Marketplace App
+# MyPreLove: Secondhand Marketplace Backend API
 
 ## Project Overview
-**MyPreLove** is a mobile application designed to create a more reliable and trusted secondhand marketplace. Developed as part of the **CPT4212 Final Year Project** at Multimedia University (MMU), the app focuses on solving common issues in existing platforms like fraud, scams, and the misrepresentation of item quality.
+**MyPreLove** is a secure, trust-focused secondhand marketplace designed for mobile users (Android). The project aims to eliminate fraud and subjective condition grading that are prevalent in current platforms like Carousell and Facebook Marketplace.
 
-## Team Members
-*   **Nur Izzah Zahirah Binti Ahmad Shahrizan** (242DC241W2)
-*   **Adreana Safiah Binti Ahmad Shafar** (242DC2432A)
-*   **Adam Bin Anwar** (243DC245L4)
-
-**Supervisor:** Nashreen Binti Hilman
-
-## Key Features & Objectives
-*   **Fraud Prevention:** Prioritizing user safety through a verification system.
-*   **Trust Score Mechanism:** Implementing a trust score to build confidence among users.
-*   **Item Condition Grading:** A standardized grading system to prevent quality misrepresentation.
-*   **User Verification:** Ensuring a secure environment for buyers and sellers.
-
-## Project Scope
-*   **Platform:** Mobile Application (Android).
-*   **Communication:** Transactions are conducted within private chats.
-*   **Language:** English interface.
-*   **Timeline:** 6-week development cycle.
-*   **Exclusions:** No native iOS version, no integrated payment processing system, and no administrative web dashboard/CMS.
-
-## Problem Statement
-Existing secondhand marketplaces in Malaysia (e.g., Carousell, Mudah.my, Facebook Marketplace) face three significant challenges:
-1.  **Pervasive Scams:** Lack of reliable verification processes.
-2.  **Quality Misrepresentation:** Ambiguous descriptions leading to buyer disappointment.
-3.  **Irrelevant Listings:** Platforms are often cluttered with commercial sellers and dropshippers.
-
-## Tech Stack
-*   **Design:** Figma, Canva
-*   **Development:** Android Studio, Visual Studio Code
-*   **Version Control:** GitHub
-*   **Hardware:** Android mobile devices
+This repository holds the **Django 6 REST API Backend** serving the mobile client. It has been built with optimized, professional-grade Python code adhering to strict relational database design and API standards.
 
 ---
-*This project is submitted to the Faculty of Computing and Informatics, Multimedia University.*
-# Final-Year-Project-Diploma
 
-## Local Setup and Run Instructions
+## 💻 Local Setup & Installation Instructions
 
-To run this project locally, follow these steps:
+Follow these steps to set up the environment on your local machine.
 
 ### 1. Prerequisites
-- Python 3.10 or higher installed on your system.
-- `git` installed.
+Ensure you have the following installed:
+- **Python 3.10 or higher** (Download from [python.org](https://www.python.org/downloads/))
+- **Git**
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/adam-anwar/Final-Year-Project-Diploma.git
+git clone <your-repo-link>
 cd Final-Year-Project-Diploma
 ```
 
-### 3. Set Up Virtual Environment
-Create and activate a virtual environment to manage dependencies:
-- **macOS/Linux:**
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-- **Windows:**
-  ```bash
-  python -m venv venv
-  venv\Scripts\activate
-  ```
+### 3. Create a Virtual Environment
+This keeps the project dependencies isolated from your system.
 
-### 4. Install Dependencies
+**For macOS / Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**For Windows (PowerShell):**
+```bash
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**For Windows (Command Prompt):**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 4. Install Required Packages
+Run this command to install all necessary libraries (Django, REST Framework, Pillow for images, etc.):
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Run Migrations
-Set up the database:
+### 5. Database Setup (Migrations)
+Apply the database schema to your local SQLite database:
 ```bash
 python manage.py migrate
 ```
 
-### 6. Create Superuser (Optional)
-If you need to access the Django admin panel:
+### 6. Create an Admin Account
+Create a "Superuser" to access the web-based management dashboard:
 ```bash
 python manage.py createsuperuser
 ```
 
-### 7. Run the Development Server
+### 7. Start the Development Server
 ```bash
 python manage.py runserver
 ```
-The server will be available at `http://127.0.0.1:8000/`.
+The API will be live at: `http://127.0.0.1:8000/api/`  
+The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
+---
 
-## Project Progress & Implemented Features
+## 🛠️ Core Features & Optimizations (Developer Notes)
 
-### 1. Project Infrastructure & Setup
-*   **Django Framework Setup:** The core project structure is established with a `core` configuration directory and an `api` application.
-*   **REST API Integration:** Django REST Framework (DRF) is installed and configured to handle API requests.
-*   **CORS Configuration:** `django-cors-headers` is configured to allow the Android mobile app to connect to the backend during development.
-*   **Dependencies:** A `requirements.txt` file is present, including essential packages like `Django`, `djangorestframework`, `pillow` (for image handling), and `django-cors-headers`.
+### 1. Robust Relational Database
+*   **Indexing:** Frequent search fields (`name`, `calculated_grade`, `is_sold`) are indexed for O(1) or O(log n) lookup speeds.
+*   **Data Integrity:** Uses Django `TextChoices` for Grading (A-D) to ensure no invalid grades enter the database.
 
-### 2. Database Models (The "Backbone")
-The following data structures have been created in `api/models.py`:
-*   **User Profiles:** Extends the default Django User system to include `trust_score`, `is_verified` status, and `profile_picture`.
-*   **Categories:** A system to classify items (e.g., Electronics, Clothing) with support for Android icon names.
-*   **Item Grading System:** An `Item` model that includes a standardized grading system (`Grade A` to `Grade D`) to track the condition of secondhand goods.
-*   **Review & Rating System:** A model to allow users to rate and review sellers, which feeds into the trust score mechanism.
+### 2. ABI Trust Model
+*   **Profile Extension:** Links strictly to Django's Auth system. Tracks verification status and trust scores.
+*   **Transaction-Locked Reviews:** Reviews are 1-to-1 with Items, meaning a user can only leave a review after a specific transaction is recognized.
 
-### 3. API Functionality
-*   **Serializers:** Standardized ways to convert database models into JSON format for the mobile app to read.
-*   **ViewSets:** Fully functional CRUD (Create, Read, Update, Delete) endpoints for:
-    *   `categories/`
-    *   `items/`
-    *   `profiles/`
-    *   `reviews/`
-*   **Automatic Logic:** The `ItemViewSet` is set up to automatically associate a newly listed item with the user who is currently logged in.
+### 3. API Performance
+*   **N+1 Query Prevention:** All endpoints use `.select_related()` to fetch related data (like Seller or Category) in a single SQL Join rather than separate hits.
+*   **CORS Support:** Pre-configured to allow Android Studio emulators and physical devices to connect seamlessly.
 
-### 4. Documentation & Setup Guides
-*   **Project Overview:** A comprehensive `README.md` explaining the "MyPreLove" concept, the problem statement (fraud/scams), and the team members.
-*   **Local Setup Instructions:** Clear steps for cloning the repo, setting up a virtual environment, installing dependencies, and running the development server.
-
-### 5. Database Migrations
-*   **Database Schema:** The initial database schema has been generated and applied through Django migrations (found in `api/migrations/`).
+*Project submitted to the Faculty of Computing and Informatics, Multimedia University (CPT4212).*

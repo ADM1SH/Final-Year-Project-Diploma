@@ -1,56 +1,73 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
-# 1. The Category Model
 class Category(models.Model):
-    name = models.CharField(max_length=100)
-    icon_name = models.CharField(max_length=50, blank=True) # Useful for Android icons
+    """Categorizes items in the marketplace."""
+    name = models.CharField(max_length=100, db_index=True)
+    icon_name = models.CharField(max_length=50, blank=True, help_text="Android icon reference")
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
-# 2. The User Profile Model
+
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    trust_score = models.FloatField(default=0.0)
-    is_verified = models.BooleanField(default=False)
-    profile_picture = models.ImageField(upload_to='profiles/', blank=True)
+    """Extended user data linked 1-to-1 with Django's User model."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    trust_score = models.FloatField(default=0.0, help_text="Calculated based on ABI model")
+    is_verified = models.BooleanField(default=False, db_index=True)
+    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username}'s Profile"
 
-# 3. The Item Model
+
 class Item(models.Model):
-    # Grade choices for the grading system
-    GRADE_CHOICES = [
-        ('A', 'Grade A - Like New'),
-        ('B', 'Grade B - Lightly Used'),
-        ('C', 'Grade C - Well Used'),
-        ('D', 'Grade D - Heavily Used'),
-    ]
+    """Represents a marketplace listing."""
+    
+    class Grade(models.TextChoices):
+        A = 'A', 'Grade A - Like New'
+        B = 'B', 'Grade B - Lightly Used'
+        C = 'C', 'Grade C - Well Used'
+        D = 'D', 'Grade D - Heavily Used'
 
-    seller = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=255)
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='items')
+    
+    name = models.CharField(max_length=255, db_index=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Grading fields
-    calculated_grade = models.CharField(max_length=1, choices=GRADE_CHOICES)
-    is_sold = models.BooleanField(default=False)
+    
+    calculated_grade = models.CharField(max_length=1, choices=Grade.choices, db_index=True)
+    is_sold = models.BooleanField(default=False, db_index=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at'] # Newest items first
 
     def __str__(self):
-        return f"{self.name} ({self.calculated_grade})"
+        return f"{self.name} - {self.get_calculated_grade_display()}"
 
-# 4. The Review & Rating Model
+
 class Review(models.Model):
-    item = models.OneToOneField(Item, on_delete=models.CASCADE)
-    reviewer = models.ForeignKey(User, related_name='reviews_given', on_delete=models.CASCADE)
-    seller = models.ForeignKey(User, related_name='reviews_received', on_delete=models.CASCADE)
-    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)]) # 1 to 5 stars
+    """Ratings and feedback left by a buyer for a seller after a transaction."""
+    item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='review')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+    
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField()
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
-        return f"Review for {self.seller.username} - {self.rating} Stars"
+        return f"{self.rating}★ for {self.seller.username} by {self.reviewer.username}"

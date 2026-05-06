@@ -30,6 +30,7 @@ staticfiles/
 *.png
 *.jpg
 *.jpeg
+docs/
 
 # OS
 .DS_Store
