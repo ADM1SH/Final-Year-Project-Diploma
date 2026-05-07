@@ -54,9 +54,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 class ItemViewSet(viewsets.ModelViewSet):
-    """CRUD operations for items. Uses select_related to avoid N+1 queries for seller/category."""
-    # select_related fetches related ForeignKey data in a single SQL query
-    queryset = Item.objects.select_related('seller', 'category').all()
+    """CRUD operations for items. Uses select_related and prefetch_related for optimal performance."""
+    # select_related for 1:1 and ForeignKeys, prefetch_related for Many-to-Many and reverse ForeignKeys
+    queryset = Item.objects.select_related('seller', 'category').prefetch_related('images').all()
     serializer_class = ItemSerializer
     permission_classes = [permissions.AllowAny]
 

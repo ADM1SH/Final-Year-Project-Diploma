@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, Review
+from .models import Category, Profile, Item, ItemImage, Review
 
 class UserSerializer(serializers.ModelSerializer):
     """Minimal user details for public nesting."""
@@ -49,19 +49,38 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ('id', 'name', 'icon_name')
 
+class ItemImageSerializer(serializers.ModelSerializer):
+    """Serializer for item gallery images."""
+    class Meta:
+        model = ItemImage
+        fields = ('id', 'image', 'created_at')
+
 class ItemSerializer(serializers.ModelSerializer):
-    """Marketplace item listing with nested seller and category info."""
+    """Marketplace item listing with nested seller, category, and gallery info."""
     seller_name = serializers.CharField(source='seller.username', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
+    images = ItemImageSerializer(many=True, read_only=True)
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = Item
         fields = (
             'id', 'seller', 'seller_name', 'category', 'category_name',
             'name', 'description', 'price', 'calculated_grade',
-            'is_sold', 'created_at'
+            'is_sold', 'images', 'uploaded_images', 'created_at'
         )
-        read_only_fields = ('seller', 'calculated_grade') # Grade should eventually be calculated, not set directly.
+        read_only_fields = ('seller', 'calculated_grade')
+
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        item = Item.objects.create(**validated_data)
+        for image in uploaded_images:
+            ItemImage.objects.create(item=item, image=image)
+        return item
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Transaction reviews."""

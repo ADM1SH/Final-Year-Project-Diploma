@@ -55,6 +55,16 @@ class Item(models.Model):
         return f"{self.name} - {self.get_calculated_grade_display()}"
 
 
+class ItemImage(models.Model):
+    """Multiple images for a single marketplace item."""
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='items/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.item.name}"
+
+
 class Review(models.Model):
     """Ratings and feedback left by a buyer for a seller after a transaction."""
     item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='review')

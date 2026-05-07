@@ -72,16 +72,30 @@ The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
 ## 🛠️ Core Features & Optimizations (Developer Notes)
 
-### 1. Robust Relational Database
+### 1. Robust Relational Database & Images
 *   **Indexing:** Frequent search fields (`name`, `calculated_grade`, `is_sold`) are indexed for O(1) or O(log n) lookup speeds.
+*   **Gallery Support:** Implemented `ItemImage` model allowing multiple high-resolution photos per listing.
 *   **Data Integrity:** Uses Django `TextChoices` for Grading (A-D) to ensure no invalid grades enter the database.
 
-### 2. ABI Trust Model
+### 2. Security & Trust (ABI Model)
+*   **Token Authentication:** Full `/api/register/` and `/api/login/` flow implemented for secure mobile session management.
 *   **Profile Extension:** Links strictly to Django's Auth system. Tracks verification status and trust scores.
 *   **Transaction-Locked Reviews:** Reviews are 1-to-1 with Items, meaning a user can only leave a review after a specific transaction is recognized.
 
 ### 3. API Performance
-*   **N+1 Query Prevention:** All endpoints use `.select_related()` to fetch related data (like Seller or Category) in a single SQL Join rather than separate hits.
+*   **Query Optimization:** All endpoints use `.select_related()` and `.prefetch_related()` (for images) to fetch all required data in a single SQL query, completely eliminating N+1 performance bottlenecks.
 *   **CORS Support:** Pre-configured to allow Android Studio emulators and physical devices to connect seamlessly.
+
+---
+
+## 📡 API Documentation (Available Endpoints)
+Base URL: `http://127.0.0.1:8000/api/`
+
+*   **`POST /register/`**: Create a new account and receive an auth token.
+*   **`POST /login/`**: Authenticate and receive an auth token.
+*   **`GET, POST /categories/`**: List and create item categories.
+*   **`GET, PUT /profiles/`**: User trust scores and verification statuses.
+*   **`GET, POST, PUT /items/`**: Marketplace listings with gallery support.
+*   **`GET, POST /reviews/`**: Transaction-based feedback.
 
 *Project submitted to the Faculty of Computing and Informatics, Multimedia University (CPT4212).*
