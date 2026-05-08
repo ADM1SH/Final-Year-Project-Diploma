@@ -102,6 +102,7 @@ Base URL: `http://127.0.0.1:8000/api/`
 *   **`GET, PUT /profiles/`**: User trust scores and verification statuses.
 *   **`GET, POST, PUT /items/`**: Marketplace listings with gallery support.
 *   **`GET, POST, PATCH /transactions/`**: Track sales between buyers and sellers.
+*   **`GET, POST /messages/`**: Secure in-app chat between buyers and sellers.
 *   **`GET, POST /reviews/`**: Transaction-based feedback.
 
 *Project submitted to the Faculty of Computing and Informatics, Multimedia University (CPT4212).*

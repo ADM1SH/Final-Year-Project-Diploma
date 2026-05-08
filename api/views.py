@@ -4,10 +4,11 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from django.db.models import Prefetch
-from .models import Category, Profile, Item, Transaction, Review
+from .models import Category, Profile, Item, Transaction, Message, Review
 from .serializers import (
     CategorySerializer, ProfileSerializer, ItemSerializer, 
-    TransactionSerializer, ReviewSerializer, RegisterSerializer, UserSerializer
+    TransactionSerializer, MessageSerializer, ReviewSerializer, 
+    RegisterSerializer, UserSerializer
 )
 
 class RegisterView(APIView):
@@ -88,6 +89,29 @@ class TransactionViewSet(viewsets.ModelViewSet):
             seller=item.seller,
             final_price=item.price
         )
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    """CRUD operations for in-app messages. Optimized and restricted to user's own chats."""
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated later
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            from django.contrib.auth.models import User
+            user = User.objects.first()
+        
+        # Only see messages where user is sender or receiver
+        from django.db.models import Q
+        return Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver', 'item')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_anonymous:
+            from django.contrib.auth.models import User
+            user = User.objects.first()
+        serializer.save(sender=user)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

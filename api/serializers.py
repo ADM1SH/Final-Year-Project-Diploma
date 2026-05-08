@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, ItemImage, Transaction, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Message, Review
 
 class UserSerializer(serializers.ModelSerializer):
     """Minimal user details for public nesting."""
@@ -98,6 +98,16 @@ class TransactionSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         )
         read_only_fields = ('buyer', 'seller')
+
+class MessageSerializer(serializers.ModelSerializer):
+    """Serializer for in-app messages."""
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+    receiver_name = serializers.CharField(source='receiver.username', read_only=True)
+
+    class Meta:
+        model = Message
+        fields = ('id', 'sender', 'sender_name', 'receiver', 'receiver_name', 'item', 'content', 'timestamp', 'is_read')
+        read_only_fields = ('sender',)
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Transaction reviews."""

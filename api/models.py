@@ -141,6 +141,23 @@ class Transaction(models.Model):
         return f"Transaction: {self.item.name} - {self.status}"
 
 
+class Message(models.Model):
+    """Secure in-app messaging between users."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
+    
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"From {self.sender.username} to {self.receiver.username}"
+
+
 class Review(models.Model):
     """Ratings and feedback left by a buyer for a seller after a transaction."""
     item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='review')
