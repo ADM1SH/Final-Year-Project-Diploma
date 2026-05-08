@@ -87,8 +87,10 @@ The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 *   **Profile Extension:** Links strictly to Django's Auth system. Tracks verification status and trust scores.
 *   **Transaction-Locked Reviews:** Reviews are 1-to-1 with Items, meaning a user can only leave a review after a specific transaction is recognized.
 
-### 3. API Performance
+### 3. API Performance & Discovery
 *   **Query Optimization:** All endpoints use `.select_related()` and `.prefetch_related()` (for images) to fetch all required data in a single SQL query, completely eliminating N+1 performance bottlenecks.
+*   **Advanced Filtering:** Integrated `django-filter` to allow the mobile app to query items by `category`, `price`, and `calculated_grade`.
+*   **Search & Ordering:** Full-text search on item names/descriptions and flexible ordering by price or date.
 *   **CORS Support:** Pre-configured to allow Android Studio emulators and physical devices to connect seamlessly.
 
 ---
@@ -101,6 +103,7 @@ Base URL: `http://127.0.0.1:8000/api/`
 *   **`GET, POST /categories/`**: List and create item categories.
 *   **`GET, PUT /profiles/`**: User trust scores and verification statuses.
 *   **`GET, POST, PUT /items/`**: Marketplace listings with gallery support.
+    *   *Filters available:* `?category=1`, `?calculated_grade=A`, `?min_price=10`, `?search=phone`
 *   **`GET, POST, PATCH /transactions/`**: Track sales between buyers and sellers.
 *   **`GET, POST /messages/`**: Secure in-app chat between buyers and sellers.
 *   **`GET, POST /reviews/`**: Transaction-based feedback.

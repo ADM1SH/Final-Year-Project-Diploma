@@ -60,6 +60,11 @@ class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.select_related('seller', 'category').prefetch_related('images').all()
     serializer_class = ItemSerializer
     permission_classes = [permissions.AllowAny]
+    
+    # Advanced Filtering, Searching, and Ordering
+    filterset_fields = ['category', 'calculated_grade', 'is_sold', 'price']
+    search_fields = ['name', 'description']
+    ordering_fields = ['price', 'created_at']
 
     def perform_create(self, serializer):
         # Auto-assign the currently authenticated user as the seller
