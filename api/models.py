@@ -2,6 +2,28 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from django.core.files.base import ContentFile
+from io import BytesIO
+from PIL import Image as PILImage
+import os
+
+def compress_image(image_field):
+    """Compresses images to reduce storage and bandwidth usage."""
+    if not image_field:
+        return
+    
+    img = PILImage.open(image_field)
+    if img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+    
+    output = BytesIO()
+    img.save(output, format='JPEG', quality=70, optimize=True)
+    output.seek(0)
+    
+    name = os.path.splitext(os.path.basename(image_field.name))[0]
+    image_field.save(f"{name}.jpg", ContentFile(output.read()), save=False)
+
+
 class Category(models.Model):
     """Categorizes items in the marketplace."""
     name = models.CharField(max_length=100, db_index=True)
@@ -21,6 +43,11 @@ class Profile(models.Model):
     trust_score = models.FloatField(default=0.0, help_text="Calculated based on ABI model")
     is_verified = models.BooleanField(default=False, db_index=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.profile_picture:
+            compress_image(self.profile_picture)
+        super().save(*args, **kwargs)
 
     def recalculate_trust_score(self):
         """
@@ -112,8 +139,28 @@ class ItemImage(models.Model):
     image = models.ImageField(upload_to='items/')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        if self.image:
+            compress_image(self.image)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Image for {self.item.name}"
+
+
+class Notification(models.Model):
+    """Internal notifications for users regarding sales, messages, and trust updates."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    is_read = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.title}"
 
 
 class Transaction(models.Model):

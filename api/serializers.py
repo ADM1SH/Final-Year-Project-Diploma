@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, ItemImage, Transaction, Message, ScamReport, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Message, ScamReport, Notification, Review
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -9,6 +9,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email')
         read_only_fields = ('username', 'email')
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Serializer for password change."""
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -44,6 +50,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ('id', 'username', 'trust_score', 'is_verified', 'profile_picture')
         read_only_fields = ('trust_score', 'is_verified')
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for user notifications."""
+    class Meta:
+        model = Notification
+        fields = ('id', 'title', 'content', 'is_read', 'created_at')
 
 class CategorySerializer(serializers.ModelSerializer):
     """Listing categories."""
