@@ -22,6 +22,31 @@ class Profile(models.Model):
     is_verified = models.BooleanField(default=False, db_index=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
+    def recalculate_trust_score(self):
+        """
+        Updates the trust_score based on the ABI model:
+        Ability (30%): Number of completed sales.
+        Benevolence (50%): Average review rating.
+        Integrity (20%): Verification status.
+        """
+        score = 0.0
+        
+        # 1. Integrity (I) - 20 Points for verification
+        if self.is_verified:
+            score += 20.0
+            
+        # 2. Ability (A) - 3 pts per completed sale (max 30 pts / 10 sales)
+        completed_sales_count = self.user.sales.filter(status='COMPLETED').count()
+        score += min(completed_sales_count * 3.0, 30.0)
+        
+        # 3. Benevolence (B) - Avg rating * 10 (max 5.0 * 10 = 50 pts)
+        avg_rating = self.user.reviews_received.aggregate(models.Avg('rating'))['rating__avg']
+        if avg_rating:
+            score += (avg_rating * 10.0)
+            
+        self.trust_score = round(score, 1)
+        self.save()
+
     def __str__(self):
         return f"{self.user.username}'s Profile"
 

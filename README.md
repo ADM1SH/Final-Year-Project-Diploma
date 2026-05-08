@@ -80,6 +80,10 @@ The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
 ### 2. Security & Trust (ABI Model)
 *   **Token Authentication:** Full `/api/register/` and `/api/login/` flow implemented for secure mobile session management.
+*   **ABI Trust Algorithm:** Implemented automated `trust_score` calculation using Django Signals.
+    *   **Ability:** Score increases with every completed sale.
+    *   **Benevolence:** Score scales with the average rating from buyer reviews.
+    *   **Integrity:** Verified status provides an immediate trust boost.
 *   **Profile Extension:** Links strictly to Django's Auth system. Tracks verification status and trust scores.
 *   **Transaction-Locked Reviews:** Reviews are 1-to-1 with Items, meaning a user can only leave a review after a specific transaction is recognized.
 
