@@ -2,30 +2,41 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+# Libraries for image compression
 from django.core.files.base import ContentFile
 from io import BytesIO
 from PIL import Image as PILImage
 import os
 
 def compress_image(image_field):
-    """Compresses images to reduce storage and bandwidth usage."""
+    """
+    This function takes an uploaded image and makes it smaller (JPEG format, 70% quality).
+    This saves storage space and makes the app load faster for users.
+    """
     if not image_field:
         return
     
     img = PILImage.open(image_field)
+    
+    # Convert to RGB if necessary (removes transparency for JPEG compatibility)
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")
     
+    # Save the compressed version into memory
     output = BytesIO()
     img.save(output, format='JPEG', quality=70, optimize=True)
     output.seek(0)
     
+    # Replace the original large file with the new small one
     name = os.path.splitext(os.path.basename(image_field.name))[0]
     image_field.save(f"{name}.jpg", ContentFile(output.read()), save=False)
 
 
 class Category(models.Model):
-    """Categorizes items in the marketplace."""
+    """
+    Stores item categories like 'Electronics' or 'Fashion'.
+    icon_name is used to tell the Android app which icon to display.
+    """
     name = models.CharField(max_length=100, db_index=True)
     icon_name = models.CharField(max_length=50, blank=True, help_text="Android icon reference")
 
@@ -38,35 +49,39 @@ class Category(models.Model):
 
 
 class Profile(models.Model):
-    """Extended user data linked 1-to-1 with Django's User model."""
+    """
+    Extends the basic User model to store marketplace-specific info.
+    Includes the Trust Score and whether the user's identity is verified.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     trust_score = models.FloatField(default=0.0, help_text="Calculated based on ABI model")
     is_verified = models.BooleanField(default=False, db_index=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Automatically compress the profile picture before saving
         if self.profile_picture:
             compress_image(self.profile_picture)
         super().save(*args, **kwargs)
 
     def recalculate_trust_score(self):
         """
-        Updates the trust_score based on the ABI model:
-        Ability (30%): Number of completed sales.
-        Benevolence (50%): Average review rating.
-        Integrity (20%): Verification status.
+        The 'Brain' of the Trust System. It follows the ABI Model:
+        1. Integrity (20 pts): Are you verified?
+        2. Ability (30 pts): How many successful sales have you done?
+        3. Benevolence (50 pts): What is your average star rating from others?
         """
         score = 0.0
         
-        # 1. Integrity (I) - 20 Points for verification
+        # Check Identity Verification
         if self.is_verified:
             score += 20.0
             
-        # 2. Ability (A) - 3 pts per completed sale (max 30 pts / 10 sales)
+        # Count completed sales (max 10 sales for 30 points)
         completed_sales_count = self.user.sales.filter(status='COMPLETED').count()
         score += min(completed_sales_count * 3.0, 30.0)
         
-        # 3. Benevolence (B) - Avg rating * 10 (max 5.0 * 10 = 50 pts)
+        # Factor in average ratings from reviews
         avg_rating = self.user.reviews_received.aggregate(models.Avg('rating'))['rating__avg']
         if avg_rating:
             score += (avg_rating * 10.0)
@@ -79,7 +94,10 @@ class Profile(models.Model):
 
 
 class Item(models.Model):
-    """Represents a marketplace listing."""
+    """
+    The main model for marketplace listings. 
+    It stores the price, condition survey, and calculated grade.
+    """
 
     class Grade(models.TextChoices):
         A = 'A', 'Grade A - Like New'
@@ -94,7 +112,7 @@ class Item(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Grading Survey Fields
+    # These fields make up the 'Condition Survey'
     is_fully_functional = models.BooleanField(default=True)
     has_scratches = models.BooleanField(default=False)
     has_dents_cracks = models.BooleanField(default=False)
@@ -108,10 +126,13 @@ class Item(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at'] # Newest items first
+        ordering = ['-created_at'] # Shows newest items first
 
     def calculate_grade(self):
-        """Mathematically determines the grade based on survey points."""
+        """
+        Objective math for item condition. 
+        Higher points = Better Grade.
+        """
         score = 0
         if self.is_fully_functional: score += 40
         if not self.has_scratches: score += 20
@@ -125,7 +146,7 @@ class Item(models.Model):
         return self.Grade.D
 
     def save(self, *args, **kwargs):
-        """Auto-calculate grade before saving to database."""
+        # Every time an item is saved, we re-run the grade calculation
         self.calculated_grade = self.calculate_grade()
         super().save(*args, **kwargs)
 
@@ -134,12 +155,15 @@ class Item(models.Model):
 
 
 class ItemImage(models.Model):
-    """Multiple images for a single marketplace item."""
+    """
+    Stores images for items. Each item can have multiple images (a gallery).
+    """
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='items/')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        # Also compress item photos for better performance
         if self.image:
             compress_image(self.image)
         super().save(*args, **kwargs)
@@ -149,7 +173,9 @@ class ItemImage(models.Model):
 
 
 class Notification(models.Model):
-    """Internal notifications for users regarding sales, messages, and trust updates."""
+    """
+    Internal alerts. Used to notify users when they get a message, a sale, or a review.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255)
     content = models.TextField()
@@ -164,7 +190,9 @@ class Notification(models.Model):
 
 
 class Transaction(models.Model):
-    """Tracks the sale of an item from a seller to a buyer."""
+    """
+    Represents a formal agreement/sale between a buyer and a seller.
+    """
     
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
@@ -189,7 +217,10 @@ class Transaction(models.Model):
 
 
 class Message(models.Model):
-    """Secure in-app messaging between users."""
+    """
+    Individual chat messages sent within the app. 
+    Helps keep users safe inside the 'secure zone'.
+    """
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
@@ -206,7 +237,9 @@ class Message(models.Model):
 
 
 class ScamReport(models.Model):
-    """Allows users to report suspicious activity or fraudulent users."""
+    """
+    Allows users to report fraud or suspicious listings to the admin.
+    """
     
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Review'
@@ -232,7 +265,9 @@ class ScamReport(models.Model):
 
 
 class Review(models.Model):
-    """Ratings and feedback left by a buyer for a seller after a transaction."""
+    """
+    Post-transaction feedback left by the buyer for the seller.
+    """
     item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='review')
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')

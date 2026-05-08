@@ -3,9 +3,15 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Profile, Transaction, Message, Notification, Review
 
+"""
+EXPLANATION: Signals are 'Automated Triggers'.
+They listen for changes in the database and run code automatically.
+This keeps your logic organized and centralized.
+"""
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """Automatically create a Profile when a new User is registered."""
+    """When a new user registers, automatically create their Profile and a welcome alert."""
     if created:
         Profile.objects.get_or_create(user=instance)
         Notification.objects.create(
@@ -16,7 +22,8 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def update_trust_and_notify(sender, instance, created, **kwargs):
-    """Update trust score and notify users on transaction events."""
+    """Triggered when a deal is started or finished."""
+    # Notify the seller when someone is interested
     if created:
         Notification.objects.create(
             user=instance.seller,
@@ -24,6 +31,7 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
             content=f"Someone is interested in your item: {instance.item.name}"
         )
     
+    # When a sale is finished, recalculate the seller's trust score automatically
     if instance.status == 'COMPLETED':
         instance.seller.profile.recalculate_trust_score()
         Notification.objects.create(
@@ -39,7 +47,7 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Message)
 def notify_on_message(sender, instance, created, **kwargs):
-    """Notify the receiver when a new message is sent."""
+    """Sends a notification alert to the receiver whenever a new chat message arrives."""
     if created:
         Notification.objects.create(
             user=instance.receiver,
@@ -49,7 +57,7 @@ def notify_on_message(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Review)
 def update_trust_on_review(sender, instance, **kwargs):
-    """Update seller's trust score when a new review is received."""
+    """Recalculate Trust Score automatically after a buyer leaves feedback."""
     instance.seller.profile.recalculate_trust_score()
     Notification.objects.create(
         user=instance.seller,
@@ -59,10 +67,7 @@ def update_trust_on_review(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Profile)
 def update_trust_on_verification(sender, instance, **kwargs):
-    """Update trust score if verification status changes."""
-    # Recalculate if verified status changed (this is a simplified check)
+    """Triggered when an Admin verifies a user. It gives their score an immediate boost."""
     if instance.is_verified:
-        # We use a flag to prevent infinite recursion if needed, 
-        # but here recalculate_trust_score saves itself. 
-        # To be safe, we can check a value or just call it if score is 0.
+        # Calls the math method we wrote in models.py
         instance.recalculate_trust_score()
