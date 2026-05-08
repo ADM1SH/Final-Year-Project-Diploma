@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, ItemImage, Transaction, Message, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Message, ScamReport, Review
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Minimal user details for public nesting."""
@@ -8,6 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email')
         read_only_fields = ('username', 'email')
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
@@ -108,6 +110,20 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ('id', 'sender', 'sender_name', 'receiver', 'receiver_name', 'item', 'content', 'timestamp', 'is_read')
         read_only_fields = ('sender',)
+
+class ScamReportSerializer(serializers.ModelSerializer):
+    """Serializer for scam reports."""
+    reporter_name = serializers.CharField(source='reporter.username', read_only=True)
+    reported_user_name = serializers.CharField(source='reported_user.username', read_only=True)
+    item_name = serializers.CharField(source='item.name', read_only=True)
+
+    class Meta:
+        model = ScamReport
+        fields = (
+            'id', 'reporter', 'reporter_name', 'reported_user', 'reported_user_name',
+            'item', 'item_name', 'reason', 'status', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('reporter', 'status')
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Transaction reviews."""

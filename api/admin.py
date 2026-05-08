@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Profile, Item, ItemImage, Transaction, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, ScamReport, Review
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -43,6 +43,15 @@ class TransactionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at')
     search_fields = ('item__name', 'buyer__username', 'seller__username')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ScamReport)
+class ScamReportAdmin(admin.ModelAdmin):
+    list_display = ('reporter', 'reported_user', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('reporter__username', 'reported_user__username', 'reason')
+    readonly_fields = ('created_at', 'updated_at')
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

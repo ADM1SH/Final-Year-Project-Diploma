@@ -158,6 +158,32 @@ class Message(models.Model):
         return f"From {self.sender.username} to {self.receiver.username}"
 
 
+class ScamReport(models.Model):
+    """Allows users to report suspicious activity or fraudulent users."""
+    
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Review'
+        INVESTIGATING = 'INVESTIGATING', 'Under Investigation'
+        RESOLVED = 'RESOLVED', 'Resolved'
+        DISMISSED = 'DISMISSED', 'Dismissed'
+
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_filed')
+    reported_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_received')
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True, related_name='scam_reports')
+    
+    reason = models.TextField(help_text="Describe the suspicious behavior")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Report by {self.reporter.username} against {self.reported_user.username}"
+
+
 class Review(models.Model):
     """Ratings and feedback left by a buyer for a seller after a transaction."""
     item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='review')

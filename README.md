@@ -106,6 +106,7 @@ Base URL: `http://127.0.0.1:8000/api/`
     *   *Filters available:* `?category=1`, `?calculated_grade=A`, `?min_price=10`, `?search=phone`
 *   **`GET, POST, PATCH /transactions/`**: Track sales between buyers and sellers.
 *   **`GET, POST /messages/`**: Secure in-app chat between buyers and sellers.
+*   **`GET, POST /scam-reports/`**: Flag suspicious listings or fraudulent behavior.
 *   **`GET, POST /reviews/`**: Transaction-based feedback.
 
 *Project submitted to the Faculty of Computing and Informatics, Multimedia University (CPT4212).*

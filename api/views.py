@@ -4,12 +4,13 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from django.db.models import Prefetch
-from .models import Category, Profile, Item, Transaction, Message, Review
+from .models import Category, Profile, Item, Transaction, Message, ScamReport, Review
 from .serializers import (
-    CategorySerializer, ProfileSerializer, ItemSerializer, 
-    TransactionSerializer, MessageSerializer, ReviewSerializer, 
-    RegisterSerializer, UserSerializer
+    CategorySerializer, ProfileSerializer, ItemSerializer,
+    TransactionSerializer, MessageSerializer, ScamReportSerializer,
+    ReviewSerializer, RegisterSerializer, UserSerializer
 )
+
 
 class RegisterView(APIView):
     """Handles new user registration and returns an auth token."""
@@ -117,6 +118,29 @@ class MessageViewSet(viewsets.ModelViewSet):
             from django.contrib.auth.models import User
             user = User.objects.first()
         serializer.save(sender=user)
+
+
+class ScamReportViewSet(viewsets.ModelViewSet):
+    """CRUD operations for scam reports. Users can create reports and see their own filed reports."""
+    serializer_class = ScamReportSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            from django.contrib.auth.models import User
+            user = User.objects.first()
+        
+        # Regular users can only see reports they filed
+        # Admins can see everything (handled by Django permissions eventually)
+        return ScamReport.objects.filter(reporter=user).select_related('reporter', 'reported_user', 'item')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_anonymous:
+            from django.contrib.auth.models import User
+            user = User.objects.first()
+        serializer.save(reporter=user)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
