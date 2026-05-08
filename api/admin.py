@@ -21,7 +21,20 @@ class ItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'seller', 'category', 'price', 'calculated_grade', 'is_sold', 'created_at')
     list_filter = ('calculated_grade', 'is_sold', 'category')
     search_fields = ('name', 'description', 'seller__username')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('calculated_grade', 'created_at', 'updated_at')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('seller', 'category', 'name', 'description', 'price', 'is_sold')
+        }),
+        ('Condition Survey (Auto-calculates Grade)', {
+            'fields': ('is_fully_functional', 'has_scratches', 'has_dents_cracks', 'has_original_box', 'has_receipt', 'calculated_grade')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
     inlines = [ItemImageInline]
 
 @admin.register(Review)

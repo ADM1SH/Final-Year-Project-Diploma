@@ -65,15 +65,17 @@ class ItemSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-    
+
     class Meta:
         model = Item
         fields = (
             'id', 'seller', 'seller_name', 'category', 'category_name',
-            'name', 'description', 'price', 'calculated_grade',
-            'is_sold', 'images', 'uploaded_images', 'created_at'
+            'name', 'description', 'price', 
+            'is_fully_functional', 'has_scratches', 'has_dents_cracks', 
+            'has_original_box', 'has_receipt',
+            'calculated_grade', 'is_sold', 'images', 'uploaded_images', 'created_at'
         )
-        read_only_fields = ('seller', 'calculated_grade')
+        read_only_fields = ('seller', 'calculated_grade', 'images')
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])

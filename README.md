@@ -72,10 +72,11 @@ The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
 ## 🛠️ Core Features & Optimizations (Developer Notes)
 
-### 1. Robust Relational Database & Images
+### 1. Robust Relational Database & Logic
 *   **Indexing:** Frequent search fields (`name`, `calculated_grade`, `is_sold`) are indexed for O(1) or O(log n) lookup speeds.
+*   **Grading Calculator:** Implemented an objective, point-based system that auto-assigns Grades A-D based on a condition survey (Functionality, Cosmetic, Completeness).
 *   **Gallery Support:** Implemented `ItemImage` model allowing multiple high-resolution photos per listing.
-*   **Data Integrity:** Uses Django `TextChoices` for Grading (A-D) to ensure no invalid grades enter the database.
+*   **Data Integrity:** Uses Django `TextChoices` for Grading (A-D) and auto-calculates grades on every save.
 
 ### 2. Security & Trust (ABI Model)
 *   **Token Authentication:** Full `/api/register/` and `/api/login/` flow implemented for secure mobile session management.
