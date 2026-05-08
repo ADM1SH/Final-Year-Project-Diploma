@@ -4,10 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from django.db.models import Prefetch
-from .models import Category, Profile, Item, Review
+from .models import Category, Profile, Item, Transaction, Review
 from .serializers import (
     CategorySerializer, ProfileSerializer, ItemSerializer, 
-    ReviewSerializer, RegisterSerializer, UserSerializer
+    TransactionSerializer, ReviewSerializer, RegisterSerializer, UserSerializer
 )
 
 class RegisterView(APIView):
@@ -68,6 +68,26 @@ class ItemViewSet(viewsets.ModelViewSet):
         if user.is_anonymous:
             user = User.objects.first() # Temporary dev hack since Auth isn't enforced yet
         serializer.save(seller=user)
+
+
+class TransactionViewSet(viewsets.ModelViewSet):
+    """CRUD operations for transactions. Automatically assigns buyer/seller and price."""
+    queryset = Transaction.objects.select_related('item', 'buyer', 'seller').all()
+    serializer_class = TransactionSerializer
+    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated later
+
+    def perform_create(self, serializer):
+        item = serializer.validated_data['item']
+        user = self.request.user
+        if user.is_anonymous:
+            from django.contrib.auth.models import User
+            user = User.objects.first()
+            
+        serializer.save(
+            buyer=user,
+            seller=item.seller,
+            final_price=item.price
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

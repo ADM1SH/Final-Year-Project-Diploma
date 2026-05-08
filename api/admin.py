@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Profile, Item, ItemImage, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Review
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -36,6 +36,13 @@ class ItemAdmin(admin.ModelAdmin):
     )
     
     inlines = [ItemImageInline]
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('item', 'buyer', 'seller', 'final_price', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('item__name', 'buyer__username', 'seller__username')
+    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

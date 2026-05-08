@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, ItemImage, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Review
 
 class UserSerializer(serializers.ModelSerializer):
     """Minimal user details for public nesting."""
@@ -83,6 +83,21 @@ class ItemSerializer(serializers.ModelSerializer):
         for image in uploaded_images:
             ItemImage.objects.create(item=item, image=image)
         return item
+
+class TransactionSerializer(serializers.ModelSerializer):
+    """Serializer for marketplace transactions."""
+    buyer_name = serializers.CharField(source='buyer.username', read_only=True)
+    seller_name = serializers.CharField(source='seller.username', read_only=True)
+    item_name = serializers.CharField(source='item.name', read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = (
+            'id', 'item', 'item_name', 'buyer', 'buyer_name', 
+            'seller', 'seller_name', 'final_price', 'status', 
+            'created_at', 'updated_at'
+        )
+        read_only_fields = ('buyer', 'seller')
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Transaction reviews."""
