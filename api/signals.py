@@ -1,17 +1,16 @@
+# signals.py
+# Automated triggers for MyPreLove.
+# This file responds to database changes with notifications and trust score updates.
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Profile, Transaction, Message, Notification, Review
 
-"""
-EXPLANATION: Signals are 'Automated Triggers'.
-They listen for changes in the database and run code automatically.
-This keeps your logic organized and centralized.
-"""
-
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """When a new user registers, automatically create their Profile and a welcome alert."""
+    # Create profiles for new users. 
+    # Send welcome alerts automatically.
     if created:
         Profile.objects.get_or_create(user=instance)
         Notification.objects.create(
@@ -22,8 +21,8 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def update_trust_and_notify(sender, instance, created, **kwargs):
-    """Triggered when a deal is started or finished."""
-    # Notify the seller when someone is interested
+    # Manage alerts for transactions. 
+    # Recalculate trust scores upon completion.
     if created:
         Notification.objects.create(
             user=instance.seller,
@@ -31,13 +30,12 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
             content=f"Someone is interested in your item: {instance.item.name}"
         )
     
-    # When a sale is finished, recalculate the seller's trust score automatically
     if instance.status == 'COMPLETED':
         instance.seller.profile.recalculate_trust_score()
         Notification.objects.create(
             user=instance.seller,
             title="Sale Completed!",
-            content=f"Your item {instance.item.name} has been sold successfully. Your trust score has improved!"
+            content=f"Your item {instance.item.name} has been sold successfully."
         )
         Notification.objects.create(
             user=instance.buyer,
@@ -47,7 +45,7 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Message)
 def notify_on_message(sender, instance, created, **kwargs):
-    """Sends a notification alert to the receiver whenever a new chat message arrives."""
+    # Notify receivers of new chat messages.
     if created:
         Notification.objects.create(
             user=instance.receiver,
@@ -57,7 +55,7 @@ def notify_on_message(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Review)
 def update_trust_on_review(sender, instance, **kwargs):
-    """Recalculate Trust Score automatically after a buyer leaves feedback."""
+    # Update seller trust scores after buyer feedback.
     instance.seller.profile.recalculate_trust_score()
     Notification.objects.create(
         user=instance.seller,
@@ -67,7 +65,6 @@ def update_trust_on_review(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Profile)
 def update_trust_on_verification(sender, instance, **kwargs):
-    """Triggered when an Admin verifies a user. It gives their score an immediate boost."""
+    # Recalculate trust scores when verification status changes.
     if instance.is_verified:
-        # Calls the math method we wrote in models.py
         instance.recalculate_trust_score()

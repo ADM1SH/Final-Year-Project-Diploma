@@ -1,3 +1,7 @@
+# tests.py
+# Automated tests for MyPreLove. 
+# Use this file to verify model and view logic.
+
 from django.test import TestCase
 
-# Create your tests here.
+# Create tests here.
