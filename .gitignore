@@ -23,8 +23,9 @@ staticfiles/
 .env
 .venv
 
-# AI Context (Committed to Repo)
-# AI_CONTEXT.md
+# AI Context (Ignored)
+AI_CONTEXT.md
+**/AI_CONTEXT.md
 
 # Screenshots & Misc
 *.png
