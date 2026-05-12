@@ -62,15 +62,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const authContextValue = React.useMemo(() => ({ 
+    user, 
+    token, 
+    isLoading, 
+    login, 
+    logout,
+    isAuthenticated: !!token 
+  }), [user, token, isLoading]);
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      isLoading, 
-      login, 
-      logout,
-      isAuthenticated: !!token 
-    }}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
