@@ -1,5 +1,5 @@
 # models.py
-# Database tables for MyPreLove. 
+# Database tables for MyPreLove.
 # This file defines structures for users, items, and sales.
 
 from django.db import models
@@ -13,21 +13,21 @@ from PIL import Image as PILImage
 import os
 
 def compress_image(image_field):
-    # Shrink images to JPEG format. 
-    # Use 70 percent quality. 
+    # Shrink images to JPEG format.
+    # Use 70 percent quality.
     # This saves space and increases speed.
     if not image_field:
         return
-    
+
     img = PILImage.open(image_field)
-    
+
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")
-    
+
     output = BytesIO()
     img.save(output, format='JPEG', quality=70, optimize=True)
     output.seek(0)
-    
+
     name = os.path.splitext(os.path.basename(image_field.name))[0]
     image_field.save(f"{name}.jpg", ContentFile(output.read()), save=False)
 
@@ -100,6 +100,10 @@ class Item(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # New fields for design alignment
+    eco_impact = models.FloatField(default=0.0, help_text="CO2 saved in kg")
+    is_negotiable = models.BooleanField(default=False)
 
     is_fully_functional = models.BooleanField(default=True)
     has_scratches = models.BooleanField(default=False)
@@ -133,6 +137,9 @@ class Item(models.Model):
 
     def save(self, *args, **kwargs):
         self.calculated_grade = self.calculate_grade()
+        # Auto-calculate eco impact if not set (approx 10% of price in kg for demo)
+        if self.eco_impact == 0:
+            self.eco_impact = float(self.price) * 0.15
         super().save(*args, **kwargs)
 
     def __str__(self):

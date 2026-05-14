@@ -66,10 +66,18 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ItemImageSerializer(serializers.ModelSerializer):
     # Format individual item images.
+    image_url = serializers.SerializerMethodField()
     class Meta:
         model = ItemImage
-        fields = ('id', 'image', 'created_at')
-
+        fields = ('id', 'image', 'image_url', 'created_at')
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return f"http://172.20.10.2:8000{obj.image.url}"
+        return None
 
 class ItemSerializer(serializers.ModelSerializer):
     # Detailed item data structure. 
@@ -77,7 +85,9 @@ class ItemSerializer(serializers.ModelSerializer):
     seller_name = serializers.CharField(source='seller.username', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     images = ItemImageSerializer(many=True, read_only=True)
-    
+    display_image = serializers.SerializerMethodField()
+
+    # We'll handle this manually in create to support multiple files in multipart
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(allow_empty_file=False, use_url=False),
         write_only=True,
@@ -88,17 +98,44 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = (
             'id', 'seller', 'seller_name', 'category', 'category_name',
-            'name', 'description', 'price', 
+            'name', 'description', 'price', 'eco_impact', 'is_negotiable',
             'is_fully_functional', 'has_scratches', 'has_dents_cracks', 
             'has_original_box', 'has_receipt',
-            'calculated_grade', 'is_sold', 'images', 'uploaded_images', 'created_at'
+            'calculated_grade', 'is_sold', 'images', 'display_image', 'uploaded_images', 'created_at'
         )
         read_only_fields = ('seller', 'calculated_grade', 'images')
 
+    def get_display_image(self, obj):
+        # Return first image if available
+        first_image = obj.images.first()
+        if (first_image and first_image.image):
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(first_image.image.url)
+            return f"http://172.20.10.2:8000{first_image.image.url}"
+
+        # Fallback to high-quality Unsplash images based on category
+        fallbacks = {
+            'Men': 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop',
+            'Women': 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
+            'Tech': 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop',
+            'Books': 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop'
+        }
+        return fallbacks.get(obj.category.name if obj.category else 'Tech', 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=800&auto=format&fit=crop')
+
     def create(self, validated_data):
-        uploaded_images = validated_data.pop('uploaded_images', [])
+        # Pop uploaded_images if present in validated_data
+        # Note: In multipart, ListField might not always populate correctly depending on the parser
+        validated_data.pop('uploaded_images', [])
+        
+        # Get files directly from the request context if possible
+        request = self.context.get('request')
+        files = []
+        if request and request.FILES:
+            files = request.FILES.getlist('uploaded_images')
+
         item = Item.objects.create(**validated_data)
-        for image in uploaded_images:
+        for image in files:
             ItemImage.objects.create(item=item, image=image)
         return item
 

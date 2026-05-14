@@ -21,7 +21,7 @@ from .serializers import (
 )
 
 class RegisterView(APIView):
-    # Create new user accounts. 
+    # Create new user accounts.
     # Provide authentication tokens immediately.
     permission_classes = [permissions.AllowAny]
 
@@ -97,6 +97,12 @@ class ItemViewSet(viewsets.ModelViewSet):
     filterset_fields = ['category', 'calculated_grade', 'is_sold', 'price']
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(f"❌ VALIDATION ERROR: {serializer.errors}")
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         user = self.request.user

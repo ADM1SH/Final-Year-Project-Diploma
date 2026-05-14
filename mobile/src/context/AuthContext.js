@@ -9,80 +9,71 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing token on app startup
   useEffect(() => {
     const loadStorageData = async () => {
       try {
         const savedToken = await AsyncStorage.getItem('userToken');
         const savedUser = await AsyncStorage.getItem('userData');
-        
         if (savedToken) {
           setToken(savedToken);
           if (savedUser) setUser(JSON.parse(savedUser));
         }
-      } catch (e) {
-        console.error('Failed to load auth data', e);
-      } finally {
+      } catch (e) {} finally {
         setIsLoading(false);
       }
     };
-
     loadStorageData();
   }, []);
 
-  const login = async (username, password) => {
+  const enterDemoMode = () => {
+    const demoUser = { id: 1, username: 'Adam Anwar', email: 'adam@example.com' };
+    const demoToken = 'demo-token';
+    setToken(demoToken);
+    setUser(demoUser);
+    return { success: true };
+  };
+
+  const login = async (username, password, isDemo = false) => {
+    if (isDemo) return enterDemoMode();
     try {
       const data = await AuthService.login(username, password);
-      
-      // Save to state
       setToken(data.token);
       setUser(data.user);
-
-      // Persist to storage
       await AsyncStorage.setItem('userToken', data.token);
       await AsyncStorage.setItem('userData', JSON.stringify(data.user));
-      
       return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.non_field_errors?.[0] || 'Login failed' 
-      };
+    } catch (e) {
+      console.error('Login Error:', e.message);
+      if (e.response) console.error('Response data:', e.response.data);
+      throw e; // RETHROW SO UI SHOWS ERROR
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const data = await AuthService.register(userData);
+      setToken(data.token);
+      setUser(data.user);
+      await AsyncStorage.setItem('userToken', data.token);
+      await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+      return { success: true };
+    } catch (e) {
+      console.error('Register Error:', e.message);
+      if (e.response) console.error('Response data:', e.response.data);
+      throw e; // RETHROW SO UI SHOWS ERROR
     }
   };
 
   const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
-      setToken(null);
-      setUser(null);
-    } catch (e) {
-      console.error('Logout failed', e);
-    }
+    await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('userData');
+    setToken(null);
+    setUser(null);
   };
 
-  const authContextValue = React.useMemo(() => ({ 
-    user, 
-    token, 
-    isLoading, 
-    login, 
-    logout,
-    isAuthenticated: !!token 
-  }), [user, token, isLoading]);
+  const value = { user, token, isLoading, login, register, logout, isAuthenticated: !!token };
 
-  return (
-    <AuthContext.Provider value={authContextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook for easy access to Auth
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
