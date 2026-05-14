@@ -1,14 +1,16 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/constants';
 import GradeBadge from './GradeBadge';
+import EcoMetric from './EcoMetric';
 
 const ItemCard = ({ item, onPress, onToggleFavorite, isFavorite }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   if (!item) return null;
   const mainImage = item.display_image || (item.images && item.images.length > 0 ? item.images[0].image : null);
 
-  // Use backend eco_impact or fallback - extremely safe check
   const getEcoImpact = () => {
     const impact = item.eco_impact || 12;
     const val = typeof impact === 'string' ? parseFloat(impact) : impact;
@@ -16,50 +18,71 @@ const ItemCard = ({ item, onPress, onToggleFavorite, isFavorite }) => {
   };
   const ecoImpact = getEcoImpact();
 
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.imageContainer}>
-        {mainImage ? (
-          <Image source={{ uri: mainImage }} style={styles.image} />
-        ) : (
-          <View style={styles.placeholderImage}>
-            <Ionicons name="image-outline" size={30} color={COLORS.gray} />
-          </View>
-        )}
-        
-        <View style={styles.topBadges}>
-          <TouchableOpacity 
-            style={styles.favoriteCircle} 
-            onPress={() => onToggleFavorite && onToggleFavorite(item.id)}
-          >
-            <Ionicons 
-              name={isFavorite ? "heart" : "heart-outline"} 
-              size={18} 
-              color={isFavorite ? COLORS.danger : COLORS.black} 
-            />
-          </TouchableOpacity>
-        </View>
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
 
-        <View style={styles.bottomBadges}>
-          {item.is_sold ? (
-            <View style={styles.soldBadge}><Text style={styles.soldText}>SOLD</Text></View>
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], width: '48%' }}>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={onPress} 
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <View style={styles.imageContainer}>
+          {mainImage ? (
+            <Image source={{ uri: mainImage }} style={styles.image} />
           ) : (
-            <GradeBadge grade={item.calculated_grade} />
+            <View style={styles.placeholderImage}>
+              <Ionicons name="image-outline" size={30} color={COLORS.gray} />
+            </View>
           )}
+          
+          <View style={styles.topBadges}>
+            <TouchableOpacity 
+              style={styles.favoriteCircle} 
+              onPress={() => onToggleFavorite && onToggleFavorite(item.id)}
+            >
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={18} 
+                color={isFavorite ? COLORS.danger : COLORS.black} 
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.bottomBadges}>
+            {item.is_sold ? (
+              <View style={styles.soldBadge}><Text style={styles.soldText}>SOLD</Text></View>
+            ) : (
+              <GradeBadge grade={item.calculated_grade} />
+            )}
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.price}>${item.price || '0'}</Text>
+        
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.price}>${item.price || '0'}</Text>
+          </View>
+          <View style={styles.ecoRow}>
+            <EcoMetric value={ecoImpact} label="kg CO2 saved" />
+          </View>
         </View>
-        <View style={styles.ecoRow}>
-          <Ionicons name="leaf-outline" size={14} color={'#111827'} />
-          <Text style={styles.ecoText}>{ecoImpact}kg CO2 saved</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
@@ -68,18 +91,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 16,
     marginBottom: 20,
-    width: '48%',
+    width: '100%',
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+    overflow: 'hidden'
   },
   imageContainer: {
     height: 160,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    overflow: 'hidden',
+    backgroundColor: COLORS.lightGray,
   },
   image: {
     width: '100%',
@@ -89,7 +111,6 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: COLORS.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
   },

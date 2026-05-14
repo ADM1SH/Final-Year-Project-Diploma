@@ -14,6 +14,8 @@ import { SellScreen } from '../screens/main/SellScreen';
 import { ChatListScreen } from '../screens/main/ChatListScreen';
 import { ChatDetailScreen } from '../screens/main/ChatDetailScreen';
 import { AdminDashboardScreen } from '../screens/main/AdminDashboardScreen';
+import { AdminUserManagementScreen } from '../screens/main/AdminUserManagementScreen';
+import { AdminItemManagementScreen } from '../screens/main/AdminItemManagementScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { COLORS } from '../utils/constants';
 
@@ -74,6 +76,8 @@ const AppStack = () => (
     <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
     <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
     <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    <Stack.Screen name="AdminUserManagement" component={AdminUserManagementScreen} />
+    <Stack.Screen name="AdminItemManagement" component={AdminItemManagementScreen} />
   </Stack.Navigator>
 );
 

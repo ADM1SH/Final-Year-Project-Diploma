@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Avg, Sum
 from rest_framework.decorators import action
 from django.contrib.auth.models import User
 
@@ -72,6 +72,13 @@ class LoginView(ObtainAuthToken):
         })
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    # Admin only user management.
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     # List available item categories.
     queryset = Category.objects.all()
@@ -85,6 +92,29 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.select_related('user').all()
     serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
+
+    @action(detail=False, methods=['get'])
+    def marketplace_stats(self, request):
+        # Return real platform-wide stats for the Admin Dashboard
+        return Response({
+            'total_users': User.objects.count(),
+            'active_items': Item.objects.filter(is_sold=False).count(),
+            'total_sales': Transaction.objects.filter(status='COMPLETED').count(),
+            'reports_pending': ScamReport.objects.filter(status='PENDING').count(),
+        })
+
+    @action(detail=True, methods=['get'])
+    def user_stats(self, request, pk=None):
+        # Return real user-specific stats for the Profile Screen
+        profile = self.get_object()
+        user = profile.user
+        return Response({
+            'live_listings': user.items.filter(is_sold=False).count(),
+            'items_sold': user.sales.filter(status='COMPLETED').count(),
+            'avg_rating': user.reviews_received.aggregate(Avg('rating'))['rating__avg'] or 0.0,
+            'trust_score': profile.trust_score,
+            'carbon_saved': user.items.aggregate(Sum('eco_impact'))['eco_impact__sum'] or 0.0
+        })
 
 
 class ItemViewSet(viewsets.ModelViewSet):
@@ -109,6 +139,19 @@ class ItemViewSet(viewsets.ModelViewSet):
         if user.is_anonymous:
             user = User.objects.first() 
         serializer.save(seller=user)
+
+    @action(detail=True, methods=['post'])
+    def toggle_favorite(self, request, pk=None):
+        item = self.get_object()
+        user = request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        
+        favorite, created = Favorite.objects.get_or_create(user=user, item=item)
+        if not created:
+            favorite.delete()
+            return Response({'status': 'removed from favorites'})
+        return Response({'status': 'added to favorites'})
 
 
 class TransactionViewSet(viewsets.ModelViewSet):

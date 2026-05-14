@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
@@ -11,29 +11,32 @@ import api from '../../api/client';
 export const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
   const { items, favorites, toggleFavorite, refreshMarket } = useMarket();
-  const [profileData, setProfileData] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('My Listings');
 
   useFocusEffect(
     useCallback(() => {
-      const fetchProfile = async () => {
+      const fetchUserData = async () => {
         try {
           if (user?.id) {
-            const res = await api.get(`profiles/${user.id}/`);
-            setProfileData(res.data);
+            const statsRes = await api.get(`profiles/${user.id}/user_stats/`);
+            setUserStats(statsRes.data);
           }
-        } catch (err) {}
+        } catch (err) {
+          console.error('Fetch User Data Error:', err.message);
+        } finally {
+          setLoading(false);
+        }
       };
-      fetchProfile();
+      fetchUserData();
       refreshMarket();
     }, [user])
   );
 
   const getFilteredItems = () => {
     if (activeTab === 'My Listings') {
-      return items.filter(item => item.seller?.username === user?.username && !item.is_sold);
-    } else if (activeTab === 'Sold Items') {
-      return items.filter(item => item.seller?.username === user?.username && item.is_sold);
+      return items.filter(item => item.seller?.username === user?.username || item.seller_name === user?.username);
     } else if (activeTab === 'Favorites') {
       return items.filter(item => favorites.includes(item.id));
     }
@@ -41,7 +44,6 @@ export const ProfileScreen = ({ navigation }) => {
   };
 
   const currentItems = getFilteredItems();
-  const trustScore = profileData?.trust_score || 98;
 
   return (
     <View style={styles.container}>
@@ -56,9 +58,6 @@ export const ProfileScreen = ({ navigation }) => {
                 <Ionicons name="shield-half" size={20} color="white"/>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.iconCircle} onPress={() => Alert.alert("Demo Info", "Profile settings are disabled in prototype mode.")}>
-              <Ionicons name="settings-outline" size={20} color={COLORS.black}/>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.iconCircle} onPress={logout}><Ionicons name="log-out-outline" size={20} color={COLORS.danger}/></TouchableOpacity>
           </View>
 
@@ -69,11 +68,10 @@ export const ProfileScreen = ({ navigation }) => {
               </View>
               <View style={styles.verifiedBadge}><Ionicons name="checkmark-circle" size={20} color={COLORS.primary}/></View>
             </View>
-            <Text style={styles.userName}>{user?.username || 'Adam Anwar'}</Text>
+            <Text style={styles.userName}>{user?.username || 'User'}</Text>
             <View style={styles.trustBadge}>
-              <Text style={styles.trustText}>Trust Score: {trustScore}%</Text>
+              <Text style={styles.trustText}>ABI Trust Score: {userStats?.trust_score || 0}%</Text>
             </View>
-            <Text style={styles.bio}>Curating high-quality pre-loved items in Cyberjaya. Sustainable fashion enthusiast.</Text>
             
             <View style={styles.locationRow}>
               <Ionicons name="location-outline" size={14} color={COLORS.gray}/>
@@ -82,30 +80,39 @@ export const ProfileScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.statsRow}>
-            <View style={styles.statItem}><Text style={styles.statValue}>24</Text><Text style={styles.statLabel}>Listings</Text></View>
-            <View style={styles.statItem}><Text style={styles.statValue}>89</Text><Text style={styles.statLabel}>Sold</Text></View>
-            <View style={styles.statItem}><Text style={styles.statValue}>4.9</Text><Text style={styles.statLabel}>Rating</Text></View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userStats?.live_listings || '0'}</Text>
+              <Text style={styles.statLabel}>Listings</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userStats?.items_sold || '0'}</Text>
+              <Text style={styles.statLabel}>Sold</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{userStats?.avg_rating?.toFixed(1) || '0.0'}</Text>
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
           </View>
 
           <View style={styles.impactCard}>
             <View style={styles.impactContent}>
               <Ionicons name="leaf" size={24} color={COLORS.white}/>
               <View style={styles.impactTextContainer}>
-                <Text style={styles.impactValue}>142kg Carbon Saved</Text>
-                <Text style={styles.impactSub}>Your contribution to a greener planet</Text>
+                <Text style={styles.impactValue}>{userStats?.carbon_saved?.toFixed(1) || '0'}kg Carbon Saved</Text>
+                <Text style={styles.impactSub}>Real-time environmental impact</Text>
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.tabSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabs}>
-            {['My Listings', 'Sold Items', 'Favorites'].map(tab => (
+          <View style={styles.tabs}>
+            {['My Listings', 'Favorites'].map(tab => (
               <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
                 <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>{tab}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
           
           <View style={styles.grid}>
             {currentItems.length > 0 ? (
@@ -121,7 +128,7 @@ export const ProfileScreen = ({ navigation }) => {
               ))
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No items found here.</Text>
+                <Text style={styles.emptyText}>No items found.</Text>
               </View>
             )}
           </View>
@@ -145,7 +152,6 @@ const styles = StyleSheet.create({
   userName: { fontSize: 28, fontWeight: 'bold', color: '#111827', letterSpacing: -0.5 },
   trustBadge: { marginTop: 8, backgroundColor: '#ECFDF5', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
   trustText: { fontSize: 14, color: '#065F46', fontWeight: 'bold' },
-  bio: { fontSize: 15, color: '#4B5563', textAlign: 'center', marginTop: 15, paddingHorizontal: 30, lineHeight: 22 },
   locationRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
   locationText: { fontSize: 14, color: COLORS.gray, marginLeft: 6 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 35, paddingHorizontal: 10 },

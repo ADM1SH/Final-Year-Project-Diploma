@@ -10,7 +10,7 @@ from .views import (
     CategoryViewSet, ProfileViewSet, ItemViewSet,
     TransactionViewSet, MessageViewSet, ScamReportViewSet,
     NotificationViewSet, ReviewViewSet, FavoriteViewSet,
-    RegisterView, LoginView, ChangePasswordView
+    UserViewSet, RegisterView, LoginView, ChangePasswordView
 )
 
 # Configure the router for automated URL generation.
@@ -19,6 +19,7 @@ router = DefaultRouter()
 # Register endpoints.
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'profiles', ProfileViewSet, basename='profile')
+router.register(r'users', UserViewSet, basename='user')
 router.register(r'items', ItemViewSet, basename='item')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
 router.register(r'messages', MessageViewSet, basename='message')

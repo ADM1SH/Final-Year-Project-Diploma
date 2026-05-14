@@ -26,16 +26,14 @@ export const GRADES = {
 };
 
 const getBaseUrl = () => {
-  // Detected Local IP for Expo Go on Physical Device
-  const LOCAL_IP = '172.20.10.2'; 
+  // Your computer's current Network IP (found via ifconfig)
+  const MACHINE_IP = '10.122.159.181'; 
 
-  if (Platform.OS === 'android') {
-    // Android emulator uses 10.0.2.2 to reach the host computer's localhost
-    return 'http://10.0.2.2:8000/api/';
-  }
-  
-  // For iOS Simulator, use localhost. For physical iOS devices, use LOCAL_IP.
-  return `http://${LOCAL_IP}:8000/api/`;
+  // For both iOS and Android physical devices (Expo Go), use the MACHINE_IP.
+  // The Android Emulator (10.0.2.2) also works with the MACHINE_IP as long as Django is running on 0.0.0.0.
+  const url = `http://${MACHINE_IP}:8000/api/`;
+  console.log('🔗 API TARGET:', url);
+  return url;
 };
 
 export const API_CONFIG = {

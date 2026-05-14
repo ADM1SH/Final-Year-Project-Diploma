@@ -16,7 +16,12 @@ export const SellScreen = ({ navigation }) => {
     price: '', 
     category: null,
     is_negotiable: false,
-    calculated_grade: 'A' 
+    calculated_grade: 'A',
+    is_fully_functional: true,
+    has_scratches: false,
+    has_dents_cracks: false,
+    has_original_box: false,
+    has_receipt: false,
   });
 
   const pickImage = async () => {
@@ -55,10 +60,15 @@ export const SellScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     setLoading(true);
-    await addItem(formData, images);
-    setLoading(false);
-    Alert.alert("Success", "Your item is live!");
-    navigation.navigate('Home');
+    try {
+      await addItem(formData, images);
+      Alert.alert("Success", "Your item is live!");
+      navigation.navigate('Home');
+    } catch (err) {
+      Alert.alert("Error", "Could not upload item. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStep1 = () => (
@@ -101,16 +111,16 @@ export const SellScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      <Text style={styles.label}>Price</Text>
+      <Text style={styles.label}>Price (RM)</Text>
       <View style={styles.priceContainer}>
-        <Text style={styles.currency}>$</Text>
+        <Text style={styles.currency}>RM</Text>
         <TextInput style={styles.priceInput} placeholder="0.00" keyboardType="numeric" value={formData.price} onChangeText={t => setFormData({...formData, price: t})}/>
       </View>
 
       <View style={styles.toggleRow}>
         <View>
           <Text style={styles.toggleLabel}>Negotiable</Text>
-          <Text style={styles.toggleSub}>Open to offers</Text>
+          <Text style={styles.toggleSub}>Open to offers from buyers</Text>
         </View>
         <TouchableOpacity 
           style={[styles.switch, formData.is_negotiable && styles.switchOn]}
@@ -125,62 +135,54 @@ export const SellScreen = ({ navigation }) => {
         onPress={() => setStep(2)}
         disabled={!formData.name || !formData.price || images.length === 0}
       >
-        <Text style={styles.nextButtonText}>Continue to Grading</Text>
+        <Text style={styles.nextButtonText}>Next: Grading Survey  →</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderStep2 = () => {
-    const grades = [
-      { id: 'A', title: 'Never used', desc: 'Item is brand new with tags or in its original unopened packaging. No flaws.', icon: 'shield-checkmark-outline' },
-      { id: 'B', title: 'Gently used', desc: 'Used a few times but looks almost new. No visible marks, stains, or damage.', icon: 'happy-outline' },
-      { id: 'C', title: 'Minor wear', desc: 'Shows signs of regular use. Might have slight pilling, minor scratches, or fading.', icon: 'time-outline' },
-      { id: 'D', title: 'Needs repair', desc: 'Functional but needs attention. May have a missing button, stuck zipper, or small hole.', icon: 'hammer-outline' },
+    const surveyItems = [
+      { id: 'is_fully_functional', label: 'Fully Functional', desc: 'No internal hardware/software issues' },
+      { id: 'has_scratches', label: 'Cosmetic Scratches', desc: 'Visible marks on the exterior' },
+      { id: 'has_dents_cracks', label: 'Dents or Cracks', desc: 'Impact damage to the body or screen' },
+      { id: 'has_original_box', label: 'Original Packaging', desc: 'Comes with original box/tags' },
+      { id: 'has_receipt', label: 'Proof of Purchase', desc: 'Valid receipt or invoice available' },
     ];
 
     return (
       <View>
         <View style={styles.stepHeader}>
-          <Text style={styles.stepTitle}>What is the condition of your item?</Text>
-          <Text style={styles.stepSub}>Be as accurate as possible to help buyers find what they're looking for.</Text>
+          <Text style={styles.stepTitle}>Item Condition Survey</Text>
+          <Text style={styles.stepSub}>Answer these questions to automatically calculate your item's Grade.</Text>
         </View>
 
-        {grades.map(g => (
+        {surveyItems.map(item => (
           <TouchableOpacity 
-            key={g.id} 
-            style={[styles.gradeCard, formData.calculated_grade === g.id && styles.activeGradeCard]}
-            onPress={() => setFormData({...formData, calculated_grade: g.id})}
+            key={item.id} 
+            style={[styles.surveyCard, formData[item.id] && styles.activeSurveyCard]}
+            onPress={() => setFormData({...formData, [item.id]: !formData[item.id]})}
           >
-            <View style={styles.gradeIcon}>
-              <Ionicons name={g.icon} size={24} color={formData.calculated_grade === g.id ? COLORS.primary : COLORS.gray}/>
+            <View style={styles.surveyInfo}>
+              <Text style={styles.surveyLabel}>{item.label}</Text>
+              <Text style={styles.surveyDesc}>{item.desc}</Text>
             </View>
-            <View style={styles.gradeInfo}>
-              <View style={styles.gradeHeader}>
-                <Text style={styles.gradeTitle}>{g.title}</Text>
-                <View style={[styles.miniBadge, {backgroundColor: COLORS.lightGray}]}>
-                  <Text style={styles.miniBadgeText}>GRADE {g.id}</Text>
-                </View>
-              </View>
-              <Text style={styles.gradeDesc}>{g.desc}</Text>
+            <View style={[styles.surveyCheckbox, formData[item.id] && styles.surveyCheckboxChecked]}>
+              {formData[item.id] && <Ionicons name="checkmark" size={16} color="white"/>}
             </View>
-            {formData.calculated_grade === g.id && (
-              <View style={styles.checkCircle}><Ionicons name="checkmark" size={12} color="white"/></View>
-            )}
           </TouchableOpacity>
         ))}
 
-        <View style={styles.impactPreview}>
-          <View style={styles.impactIcon}><Ionicons name="leaf" size={20} color={COLORS.primary}/></View>
-          <View>
-            <Text style={styles.impactTitle}>Eco-Impact</Text>
-            <Text style={styles.impactText}>Listing this item saves approx. {(parseFloat(formData.price || 0) * 0.15).toFixed(1)}kg of carbon emissions.</Text>
+        <View style={styles.gradePreview}>
+          <Text style={styles.previewLabel}>Auto-Calculated Grade:</Text>
+          <View style={styles.previewBadge}>
+            <Text style={styles.previewGrade}>GRADE A</Text>
           </View>
         </View>
 
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          {loading ? <ActivityIndicator color="#fff"/> : <Text style={styles.submitButtonText}>List It Now</Text>}
+          {loading ? <ActivityIndicator color="#fff"/> : <Text style={styles.submitButtonText}>Publish Listing</Text>}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.backLink} onPress={() => setStep(1)}><Text style={styles.backLinkText}>Back to basics</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.backLink} onPress={() => setStep(1)}><Text style={styles.backLinkText}>← Back to basics</Text></TouchableOpacity>
       </View>
     );
   };
@@ -190,8 +192,13 @@ export const SellScreen = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}><Ionicons name="close" size={24} color={COLORS.black}/></TouchableOpacity>
         <Text style={styles.headerTitle}>List an Item</Text>
-        <TouchableOpacity><Text style={styles.draftsText}>Drafts</Text></TouchableOpacity>
+        <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>Step {step}/2</Text></View>
       </View>
+      
+      <View style={styles.progressBar}>
+        <View style={[styles.progressFill, { width: step === 1 ? '50%' : '100%' }]} />
+      </View>
+
       <ScrollView contentContainerStyle={styles.content}>
         {step === 1 ? renderStep1() : renderStep2()}
       </ScrollView>
@@ -201,9 +208,12 @@ export const SellScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white },
-  header: { paddingTop: 60, paddingBottom: 15, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: COLORS.lightGray },
+  header: { paddingTop: 60, paddingBottom: 15, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
-  draftsText: { color: COLORS.primary, fontWeight: '600' },
+  stepBadge: { backgroundColor: COLORS.lightGray, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  stepBadgeText: { fontSize: 12, fontWeight: 'bold', color: COLORS.gray },
+  progressBar: { height: 4, backgroundColor: COLORS.lightGray, width: '100%' },
+  progressFill: { height: '100%', backgroundColor: COLORS.primary },
   content: { padding: 20 },
   section: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   sectionLabel: { fontSize: 18, fontWeight: 'bold' },
@@ -213,7 +223,7 @@ const styles = StyleSheet.create({
   addPhotoText: { fontSize: 10, color: COLORS.primary, fontWeight: 'bold', marginTop: 4 },
   photoItem: { width: 100, height: 100, marginLeft: 10, borderRadius: 12, overflow: 'hidden' },
   thumbnail: { width: '100%', height: '100%' },
-  removePhoto: { position: 'absolute', top: 5, right: 5 },
+  removePhoto: { position: 'absolute', top: 5, right: 5, zIndex: 5 },
   label: { fontSize: 14, fontWeight: '600', color: COLORS.black, marginBottom: 8, marginTop: 10 },
   input: { backgroundColor: COLORS.lightGray, borderRadius: 12, padding: 16, marginBottom: 20, fontSize: 16 },
   categoryPicker: { marginBottom: 20 },
@@ -237,20 +247,17 @@ const styles = StyleSheet.create({
   stepHeader: { marginBottom: 25 },
   stepTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.black },
   stepSub: { fontSize: 14, color: COLORS.gray, marginTop: 8 },
-  gradeCard: { flexDirection: 'row', padding: 16, borderRadius: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: COLORS.lightGray, marginBottom: 12 },
-  activeGradeCard: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '05' },
-  gradeIcon: { width: 40, height: 40, justifyContent: 'center' },
-  gradeInfo: { flex: 1 },
-  gradeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  gradeTitle: { fontSize: 16, fontWeight: 'bold' },
-  miniBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  miniBadgeText: { fontSize: 10, fontWeight: 'bold', color: COLORS.gray },
-  gradeDesc: { fontSize: 12, color: COLORS.gray, lineHeight: 18 },
-  checkCircle: { position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
-  impactPreview: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.eco, padding: 16, borderRadius: 12, marginBottom: 30, marginTop: 10 },
-  impactIcon: { marginRight: 12 },
-  impactTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.ecoText },
-  impactText: { fontSize: 12, color: COLORS.ecoText, marginTop: 2 },
+  surveyCard: { flexDirection: 'row', padding: 16, borderRadius: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: COLORS.lightGray, marginBottom: 12, alignItems: 'center' },
+  activeSurveyCard: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '05' },
+  surveyInfo: { flex: 1 },
+  surveyLabel: { fontSize: 16, fontWeight: 'bold' },
+  surveyDesc: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
+  surveyCheckbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: COLORS.lightGray, justifyContent: 'center', alignItems: 'center' },
+  surveyCheckboxChecked: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  gradePreview: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.lightGray, padding: 15, borderRadius: 12, marginVertical: 20 },
+  previewLabel: { fontSize: 14, fontWeight: '600' },
+  previewBadge: { backgroundColor: COLORS.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  previewGrade: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   submitButton: { backgroundColor: COLORS.primary, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   submitButtonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
   backLink: { marginTop: 20, alignItems: 'center' },

@@ -2,29 +2,65 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
-
-const MOCK_MESSAGES = [
-  { id: '1', senderId: 'seller', text: 'Hi! Yes, the satchel is still available.', time: '10:00 AM' },
-  { id: '2', senderId: 'me', text: 'Great! Is the price negotiable?', time: '10:05 AM' },
-  { id: '3', senderId: 'seller', text: 'I can do $80 if you can pick up today.', time: '10:06 AM' },
-];
+import api from '../../api/client';
 
 export const ChatDetailScreen = ({ route, navigation }) => {
-  const { userName } = route.params || { userName: 'Seller' };
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const { userName, sellerId } = route.params || { userName: 'User', sellerId: null };
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const flatListRef = useRef();
 
-  const sendMessage = () => {
+  const fetchMessages = async () => {
+    try {
+      const res = await api.get('messages/');
+      // Filter for this specific conversation (sender or receiver)
+      const data = res.data.results || res.data;
+      const conversation = data.filter(m => 
+        (m.sender_name === userName || m.receiver_name === userName)
+      );
+      setMessages(conversation);
+    } catch (err) {
+      console.error('Fetch Messages Error:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+    // Real-time Polling: Check for new messages every 4 seconds
+    const interval = setInterval(fetchMessages, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendMessage = async () => {
     if (input.trim() === '') return;
+    
+    // Optimistic Update
+    const tempId = Date.now().toString();
     const newMessage = {
-      id: Date.now().toString(),
-      senderId: 'me',
-      text: input,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      id: tempId,
+      sender_name: 'me',
+      content: input,
+      timestamp: new Date().toISOString(),
     };
     setMessages([...messages, newMessage]);
+    const currentInput = input;
     setInput('');
+
+    try {
+      // Find receiver ID (In a real app, this is passed in params)
+      // For demo, we'll try to post to a default or the sellerId if available
+      await api.post('messages/', {
+        receiver: sellerId || 2, // Fallback to a demo ID
+        content: currentInput
+      });
+      fetchMessages(); // Refresh from server
+    } catch (e) {
+      console.error('Send Error:', e.message);
+    }
+  };
+
+  const formatTime = (iso) => {
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -46,17 +82,23 @@ export const ChatDetailScreen = ({ route, navigation }) => {
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={[styles.messageBubble, item.senderId === 'me' ? styles.myMessage : styles.theirMessage]}>
-            <Text style={[styles.messageText, item.senderId === 'me' ? styles.myMessageText : styles.theirMessageText]}>
-              {item.text}
+          <View style={[
+            styles.messageBubble, 
+            (item.sender_name === 'adamanwar' || item.sender_name === 'me') ? styles.myMessage : styles.theirMessage
+          ]}>
+            <Text style={[
+              styles.messageText, 
+              (item.sender_name === 'adamanwar' || item.sender_name === 'me') ? styles.myMessageText : styles.theirMessageText
+            ]}>
+              {item.content}
             </Text>
-            <Text style={styles.messageTime}>{item.time}</Text>
+            <Text style={styles.messageTime}>{formatTime(item.timestamp)}</Text>
           </View>
         )}
         contentContainerStyle={styles.messageList}
-        onContentSizeChange={() => flatListRef.current.scrollToEnd()}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       <View style={styles.inputContainer}>

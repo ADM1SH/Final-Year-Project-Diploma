@@ -112,8 +112,9 @@ class ItemSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(first_image.image.url)
-            return f"http://172.20.10.2:8000{first_image.image.url}"
-
+            # Fallback for when request context is missing
+            return first_image.image.url
+        
         # Fallback to high-quality Unsplash images based on category
         fallbacks = {
             'Men': 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop',
@@ -207,6 +208,4 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('id', 'user', 'item', 'item_name', 'item_price', 'created_at')
-        read_only_fields = ('user',)
-, 'item_price', 'created_at')
         read_only_fields = ('user',)
