@@ -48,7 +48,17 @@ export const ProfileScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.topActions}>
-            <TouchableOpacity style={styles.iconCircle}><Ionicons name="settings-outline" size={20} color={COLORS.black}/></TouchableOpacity>
+            {user?.username === 'superadmin' && (
+              <TouchableOpacity 
+                style={[styles.iconCircle, { backgroundColor: COLORS.danger }]}
+                onPress={() => navigation.navigate('AdminDashboard')}
+              >
+                <Ionicons name="shield-half" size={20} color="white"/>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.iconCircle} onPress={() => Alert.alert("Demo Info", "Profile settings are disabled in prototype mode.")}>
+              <Ionicons name="settings-outline" size={20} color={COLORS.black}/>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.iconCircle} onPress={logout}><Ionicons name="log-out-outline" size={20} color={COLORS.danger}/></TouchableOpacity>
           </View>
 

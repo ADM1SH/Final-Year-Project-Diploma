@@ -13,6 +13,7 @@ import { UpdatesScreen } from '../screens/main/UpdatesScreen';
 import { SellScreen } from '../screens/main/SellScreen';
 import { ChatListScreen } from '../screens/main/ChatListScreen';
 import { ChatDetailScreen } from '../screens/main/ChatDetailScreen';
+import { AdminDashboardScreen } from '../screens/main/AdminDashboardScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { COLORS } from '../utils/constants';
 
@@ -72,6 +73,7 @@ const AppStack = () => (
     <Stack.Screen name="MainTabs" component={MainTabs} />
     <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
     <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+    <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
   </Stack.Navigator>
 );
 

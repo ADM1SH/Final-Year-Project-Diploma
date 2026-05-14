@@ -113,7 +113,10 @@ export const ItemDetailScreen = ({ route, navigation }) => {
           <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.primary}/>
           <Text style={styles.chatButtonText}>Chat with Seller</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.buyButton}>
+        <TouchableOpacity 
+          style={styles.buyButton}
+          onPress={() => Alert.alert("Success", "Offer sent to seller!")}
+        >
           <Text style={styles.buyButtonText}>Make Offer</Text>
         </TouchableOpacity>
       </View>

@@ -76,7 +76,7 @@ class ItemImageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.image.url)
-            return f"http://172.20.10.2:8000{obj.image.url}"
+            return obj.image.url
         return None
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -207,4 +207,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('id', 'user', 'item', 'item_name', 'item_price', 'created_at')
+        read_only_fields = ('user',)
+, 'item_price', 'created_at')
         read_only_fields = ('user',)

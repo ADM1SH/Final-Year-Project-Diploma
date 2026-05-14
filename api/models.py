@@ -121,7 +121,7 @@ class Item(models.Model):
         ordering = ['-created_at']
 
     def calculate_grade(self):
-        # Determine condition grade. 
+        # Determine condition grade.
         # Points result in grades A through D.
         score = 0
         if self.is_fully_functional: score += 40

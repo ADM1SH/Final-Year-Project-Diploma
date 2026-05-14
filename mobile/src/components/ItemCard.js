@@ -3,8 +3,8 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/constants';
 import GradeBadge from './GradeBadge';
-import EcoMetric from './EcoMetric';
-const ItemCard = ({ item, onPress }) => {
+
+const ItemCard = ({ item, onPress, onToggleFavorite, isFavorite }) => {
   if (!item) return null;
   const mainImage = item.display_image || (item.images && item.images.length > 0 ? item.images[0].image : null);
 
@@ -12,7 +12,7 @@ const ItemCard = ({ item, onPress }) => {
   const getEcoImpact = () => {
     const impact = item.eco_impact || 12;
     const val = typeof impact === 'string' ? parseFloat(impact) : impact;
-    return isNaN(val) ? "12kg" : val.toFixed(0) + "kg";
+    return isNaN(val) ? "12" : val.toFixed(0);
   };
   const ecoImpact = getEcoImpact();
 
@@ -26,7 +26,21 @@ const ItemCard = ({ item, onPress }) => {
             <Ionicons name="image-outline" size={30} color={COLORS.gray} />
           </View>
         )}
-        <View style={styles.badgeContainer}>
+        
+        <View style={styles.topBadges}>
+          <TouchableOpacity 
+            style={styles.favoriteCircle} 
+            onPress={() => onToggleFavorite && onToggleFavorite(item.id)}
+          >
+            <Ionicons 
+              name={isFavorite ? "heart" : "heart-outline"} 
+              size={18} 
+              color={isFavorite ? COLORS.danger : COLORS.black} 
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomBadges}>
           {item.is_sold ? (
             <View style={styles.soldBadge}><Text style={styles.soldText}>SOLD</Text></View>
           ) : (
@@ -42,7 +56,7 @@ const ItemCard = ({ item, onPress }) => {
         </View>
         <View style={styles.ecoRow}>
           <Ionicons name="leaf-outline" size={14} color={'#111827'} />
-          <Text style={styles.ecoText}>{ecoImpact} CO2 saved</Text>
+          <Text style={styles.ecoText}>{ecoImpact}kg CO2 saved</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -79,10 +93,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  badgeContainer: {
+  topBadges: {
     position: 'absolute',
     top: 10,
+    left: 10,
+    zIndex: 10,
+  },
+  favoriteCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+  },
+  bottomBadges: {
+    position: 'absolute',
+    bottom: 10,
     right: 10,
+    zIndex: 10,
+  },
+  soldBadge: {
+    backgroundColor: COLORS.danger,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  soldText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   content: {
     padding: 12,
@@ -112,12 +153,6 @@ const styles = StyleSheet.create({
   ecoText: {
     fontSize: 11,
     color: COLORS.gray,
-    marginLeft: 4,
-  },
-});
-
-export default ItemCard;
-S.gray,
     marginLeft: 4,
   },
 });
