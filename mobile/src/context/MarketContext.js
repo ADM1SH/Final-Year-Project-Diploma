@@ -24,6 +24,7 @@ const INITIAL_ITEMS = [
 
 export const MarketProvider = ({ children }) => {
   const [items, setItems] = useState(INITIAL_ITEMS);
+  const [favorites, setFavorites] = useState([]);
   const [categories, setCategories] = useState([
     { id: 1, name: 'Men' }, { id: 2, name: 'Women' }, { id: 3, name: 'Tech' }, { id: 4, name: 'Books' }
   ]);
@@ -31,20 +32,37 @@ export const MarketProvider = ({ children }) => {
   const refreshMarket = async () => {
     try {
       console.log('Refreshing market from API...');
-      const [catRes, itemRes] = await Promise.all([api.get('categories/'), api.get('items/')]);
+      const [catRes, itemRes, favRes] = await Promise.all([
+        api.get('categories/'), 
+        api.get('items/'),
+        api.get('favorites/')
+      ]);
+      
       const cats = catRes.data.results || catRes.data;
       const itemsData = itemRes.data.results || itemRes.data;
+      const favsData = favRes.data.results || favRes.data;
+
       if (cats && cats.length > 0) setCategories(cats);
       if (itemsData && itemsData.length > 0) setItems(itemsData);
+      if (favsData) setFavorites(favsData.map(f => f.item));
+      
       console.log('Market refreshed successfully.');
     } catch (e) {
       console.error('Refresh Market Error:', e.message);
-      if (e.response) {
-          console.error('Response Status:', e.response.status);
-          console.error('Response Data:', e.response.data);
-      } else if (e.request) {
-          console.error('No response received. Check server IP and Firewall.');
+    }
+  };
+
+  const toggleFavorite = async (itemId) => {
+    try {
+      const isFav = favorites.includes(itemId);
+      if (isFav) {
+        setFavorites(favorites.filter(id => id !== itemId));
+      } else {
+        setFavorites([...favorites, itemId]);
       }
+      await api.post(`items/${itemId}/toggle_favorite/`);
+    } catch (e) {
+      console.error('Toggle Favorite Error:', e.message);
     }
   };
 
@@ -87,16 +105,14 @@ export const MarketProvider = ({ children }) => {
           type: 'image/jpeg',
         });
       });
-      console.log('Syncing item to backend...');
       await api.post('items/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-      console.log('Item synced successfully.');
     } catch (e) {
       console.error('Sync Error:', e.message);
     }
   };
 
   return (
-    <MarketContext.Provider value={{ items, categories, refreshMarket, addItem }}>
+    <MarketContext.Provider value={{ items, categories, favorites, refreshMarket, addItem, toggleFavorite }}>
       {children}
     </MarketContext.Provider>
   );

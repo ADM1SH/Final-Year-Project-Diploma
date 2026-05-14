@@ -8,8 +8,9 @@ import ItemCard from '../../components/ItemCard';
 import { useMarket } from '../../context/MarketContext';
 
 export const ExploreScreen = ({ navigation }) => {
-  const { items, categories, refreshMarket } = useMarket();
+  const { items, categories, favorites, refreshMarket, toggleFavorite } = useMarket();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -17,16 +18,33 @@ export const ExploreScreen = ({ navigation }) => {
     }, [])
   );
 
+  const filteredItems = items.filter(item => {
+    const matchesCategory = !selectedCategory || item.category === selectedCategory;
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.logoText}>MyPreLove</Text>
           <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}><Ionicons name="search-outline" size={24} color={'#064E3B'}/></TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}><Ionicons name="camera-outline" size={24} color={'#064E3B'}/></TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('For You')}><Ionicons name="person-circle-outline" size={28} color={'#064E3B'}/></TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('For You')}>
+              <Ionicons name="person-circle-outline" size={28} color={'#064E3B'}/>
+            </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color={COLORS.gray} style={styles.searchIcon} />
+          <TextInput 
+            style={styles.searchInput} 
+            placeholder="Search for items..." 
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
       </View>
 
@@ -45,32 +63,40 @@ export const ExploreScreen = ({ navigation }) => {
               onPress={() => setSelectedCategory(cat.id)} 
             />
           ))}
-          <CategoryChip name="Other" active={false} onPress={() => {}} />
         </ScrollView>
       </View>
 
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={styles.sectionTitle}>Curated For You</Text>
-          <Text style={styles.sectionSubtitle}>Quality pre-loved items from your conscious neighbors.</Text>
+          <Text style={styles.sectionTitle}>
+            {searchQuery ? `Results for "${searchQuery}"` : 'Curated For You'}
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            {filteredItems.length} items found.
+          </Text>
         </View>
-        <TouchableOpacity>
-          <Text style={styles.viewAll}>View All →</Text>
-        </TouchableOpacity>
       </View>
 
       <FlatList
-        data={items.filter(item => !selectedCategory || item.category === selectedCategory)}
+        data={filteredItems}
         renderItem={({ item }) => (
           <ItemCard 
             item={item} 
             onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })} 
+            onToggleFavorite={toggleFavorite}
+            isFavorite={favorites.includes(item.id)}
           />
         )}
         keyExtractor={item => item.id.toString()}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.itemList}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={50} color={COLORS.gray} />
+            <Text style={styles.emptyText}>No items matched your search.</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -78,17 +104,21 @@ export const ExploreScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { paddingHorizontal: 16, paddingTop: 60, paddingBottom: 10 },
+  header: { paddingHorizontal: 16, paddingTop: 60, paddingBottom: 15, backgroundColor: 'white' },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   logoText: { fontSize: 24, fontWeight: 'bold', color: '#064E3B', letterSpacing: -0.5 },
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
   iconButton: { marginLeft: 15 },
-  categoryContainer: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 12, height: 45 },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, fontSize: 16, color: '#111827' },
+  categoryContainer: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', backgroundColor: 'white' },
   categoryList: { paddingHorizontal: 16 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 20, marginBottom: 15 },
+  sectionHeader: { paddingHorizontal: 16, marginTop: 20, marginBottom: 15 },
   sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
-  sectionSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2, width: '80%' },
-  viewAll: { color: '#064E3B', fontWeight: '600', fontSize: 14 },
+  sectionSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
   itemList: { paddingBottom: 100 },
-  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 16 }
+  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 16 },
+  emptyContainer: { alignItems: 'center', marginTop: 50 },
+  emptyText: { color: COLORS.gray, marginTop: 10, fontSize: 16 }
 });

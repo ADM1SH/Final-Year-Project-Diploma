@@ -231,3 +231,14 @@ class Review(models.Model):
     comment = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Favorite(models.Model):
+    # Track user's liked items.
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'item')
+        ordering = ['-created_at']

@@ -9,7 +9,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     CategoryViewSet, ProfileViewSet, ItemViewSet,
     TransactionViewSet, MessageViewSet, ScamReportViewSet,
-    NotificationViewSet, ReviewViewSet, 
+    NotificationViewSet, ReviewViewSet, FavoriteViewSet,
     RegisterView, LoginView, ChangePasswordView
 )
 
@@ -25,6 +25,7 @@ router.register(r'messages', MessageViewSet, basename='message')
 router.register(r'scam-reports', ScamReportViewSet, basename='scam-report')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'reviews', ReviewViewSet, basename='review')
+router.register(r'favorites', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     # Router generated paths.

@@ -27,7 +27,11 @@ const ItemCard = ({ item, onPress }) => {
           </View>
         )}
         <View style={styles.badgeContainer}>
-          <GradeBadge grade={item.calculated_grade} />
+          {item.is_sold ? (
+            <View style={styles.soldBadge}><Text style={styles.soldText}>SOLD</Text></View>
+          ) : (
+            <GradeBadge grade={item.calculated_grade} />
+          )}
         </View>
       </View>
       
@@ -108,6 +112,12 @@ const styles = StyleSheet.create({
   ecoText: {
     fontSize: 11,
     color: COLORS.gray,
+    marginLeft: 4,
+  },
+});
+
+export default ItemCard;
+S.gray,
     marginLeft: 4,
   },
 });

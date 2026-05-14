@@ -12,12 +12,12 @@ from rest_framework.decorators import action
 from django.contrib.auth.models import User
 
 # Local imports
-from .models import Category, Profile, Item, Transaction, Message, ScamReport, Notification, Review
+from .models import Category, Profile, Item, Transaction, Message, ScamReport, Notification, Review, Favorite
 from .serializers import (
     CategorySerializer, ProfileSerializer, ItemSerializer,
     TransactionSerializer, MessageSerializer, ScamReportSerializer,
     NotificationSerializer, ChangePasswordSerializer,
-    ReviewSerializer, RegisterSerializer, UserSerializer
+    ReviewSerializer, RegisterSerializer, UserSerializer, FavoriteSerializer
 )
 
 class RegisterView(APIView):
@@ -199,3 +199,20 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notification.is_read = True
         notification.save()
         return Response({'status': 'notification marked as read'})
+
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        return Favorite.objects.filter(user=user).select_related('item')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        serializer.save(user=user)

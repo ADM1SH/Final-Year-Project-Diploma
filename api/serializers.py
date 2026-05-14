@@ -4,7 +4,7 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Profile, Item, ItemImage, Transaction, Message, ScamReport, Notification, Review
+from .models import Category, Profile, Item, ItemImage, Transaction, Message, ScamReport, Notification, Review, Favorite
 
 class UserSerializer(serializers.ModelSerializer):
     # Display basic user info. 
@@ -198,3 +198,13 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ('id', 'title', 'content', 'is_read', 'created_at')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    item_name = serializers.CharField(source='item.name', read_only=True)
+    item_price = serializers.CharField(source='item.price', read_only=True)
+    
+    class Meta:
+        model = Favorite
+        fields = ('id', 'user', 'item', 'item_name', 'item_price', 'created_at')
+        read_only_fields = ('user',)
