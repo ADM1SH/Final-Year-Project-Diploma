@@ -1,67 +1,67 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 
 export const ChatDetailScreen = ({ route, navigation }) => {
-  const { userName, sellerId } = route.params || { userName: 'User', sellerId: null };
+  const { userName } = route.params || { userName: 'User' };
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
   const flatListRef = useRef();
 
   const fetchMessages = async () => {
     try {
-      const res = await api.get('messages/');
-      // Filter for this specific conversation (sender or receiver)
+      const res = await api.get(`messages/?partner=${userName}`);
       const data = res.data.results || res.data;
-      const conversation = data.filter(m => 
-        (m.sender_name === userName || m.receiver_name === userName)
-      );
-      setMessages(conversation);
+      setMessages(data);
     } catch (err) {
       console.error('Fetch Messages Error:', err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMessages();
-    // Real-time Polling: Check for new messages every 4 seconds
-    const interval = setInterval(fetchMessages, 4000);
+    // Real-time Polling: Check for new messages every 3 seconds
+    const interval = setInterval(fetchMessages, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [userName]);
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
     
-    // Optimistic Update
-    const tempId = Date.now().toString();
-    const newMessage = {
-      id: tempId,
-      sender_name: 'me',
-      content: input,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages([...messages, newMessage]);
-    const currentInput = input;
+    const content = input;
     setInput('');
 
     try {
-      // Find receiver ID (In a real app, this is passed in params)
-      // For demo, we'll try to post to a default or the sellerId if available
-      await api.post('messages/', {
-        receiver: sellerId || 2, // Fallback to a demo ID
-        content: currentInput
-      });
-      fetchMessages(); // Refresh from server
+      // First, we need to find the partner's actual ID
+      const userRes = await api.get(`users/`);
+      const allUsers = userRes.data.results || userRes.data;
+      const partner = allUsers.find(u => u.username === userName);
+      
+      if (partner) {
+        await api.post('messages/', {
+          receiver: partner.id,
+          content: content
+        });
+        fetchMessages(); // Refresh immediately
+      }
     } catch (e) {
       console.error('Send Error:', e.message);
+      Alert.alert("Error", "Message could not be sent.");
     }
   };
 
   const formatTime = (iso) => {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
 
   return (
     <KeyboardAvoidingView 
@@ -86,11 +86,11 @@ export const ChatDetailScreen = ({ route, navigation }) => {
         renderItem={({ item }) => (
           <View style={[
             styles.messageBubble, 
-            (item.sender_name === 'adamanwar' || item.sender_name === 'me') ? styles.myMessage : styles.theirMessage
+            item.sender_name === user?.username ? styles.myMessage : styles.theirMessage
           ]}>
             <Text style={[
               styles.messageText, 
-              (item.sender_name === 'adamanwar' || item.sender_name === 'me') ? styles.myMessageText : styles.theirMessageText
+              item.sender_name === user?.username ? styles.myMessageText : styles.theirMessageText
             ]}>
               {item.content}
             </Text>
@@ -99,6 +99,7 @@ export const ChatDetailScreen = ({ route, navigation }) => {
         )}
         contentContainerStyle={styles.messageList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       <View style={styles.inputContainer}>
@@ -122,18 +123,19 @@ export const ChatDetailScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { paddingTop: 60, paddingBottom: 15, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: COLORS.lightGray },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
-  messageList: { padding: 20 },
+  messageList: { padding: 20, paddingBottom: 40 },
   messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 18, marginBottom: 15 },
-  myMessage: { alignSelf: 'flex-end', backgroundColor: COLORS.primary },
-  theirMessage: { alignSelf: 'flex-start', backgroundColor: COLORS.lightGray },
-  messageText: { fontSize: 15 },
+  myMessage: { alignSelf: 'flex-end', backgroundColor: '#064E3B', borderBottomRightRadius: 2 },
+  theirMessage: { alignSelf: 'flex-start', backgroundColor: '#F3F4F6', borderBottomLeftRadius: 2 },
+  messageText: { fontSize: 15, lineHeight: 20 },
   myMessageText: { color: 'white' },
   theirMessageText: { color: COLORS.black },
   messageTime: { fontSize: 10, color: COLORS.gray, marginTop: 4, alignSelf: 'flex-end' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingBottom: 35, borderTopWidth: 1, borderTopColor: COLORS.lightGray },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingBottom: 35, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
   attachBtn: { marginRight: 10 },
-  input: { flex: 1, backgroundColor: COLORS.lightGray, borderRadius: 20, paddingHorizontal: 15, paddingVertical: 8, maxHeight: 100, fontSize: 15 },
-  sendBtn: { marginLeft: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' }
+  input: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 15, paddingVertical: 8, maxHeight: 100, fontSize: 15 },
+  sendBtn: { marginLeft: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: '#064E3B', justifyContent: 'center', alignItems: 'center' }
 });

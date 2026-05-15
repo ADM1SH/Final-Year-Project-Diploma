@@ -8,17 +8,17 @@ const INITIAL_ITEMS = [
   { 
     id: 1, name: 'Vintage Leather Satchel', price: '85.00', calculated_grade: 'A', 
     display_image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 12.4, seller: { username: 'Ahmad Zaki' }, description: 'Beg kulit vintaj yang dijaga rapi. Lokasi: Shah Alam.'
+    eco_impact: 12.4, seller: { username: 'Ahmad Zaki' }, description: 'Meticulously cared for vintage leather bag. Extremely durable. Location: Shah Alam.'
   },
   { 
     id: 2, name: 'Denim Trucker Jacket', price: '120.00', calculated_grade: 'B', 
     display_image: 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 8.2, seller: { username: 'Nurul Izzah' }, description: 'Jaket denim klasik. Lokasi: Bangi.'
+    eco_impact: 8.2, seller: { username: 'Nurul Izzah' }, description: 'Classic denim jacket with a perfect vintage fade. Location: Bangi.'
   },
   { 
     id: 3, name: 'Fujifilm X-T3 Camera', price: '2850.00', calculated_grade: 'A', 
     display_image: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 45.0, seller: { username: 'Farhan Rosli' }, description: 'Kamera digital mirrorless. Lokasi: Kuala Lumpur.'
+    eco_impact: 45.0, seller: { username: 'Farhan Rosli' }, description: 'Professional mirrorless digital camera. 18-55mm lens included. Location: Kuala Lumpur.'
   }
 ];
 

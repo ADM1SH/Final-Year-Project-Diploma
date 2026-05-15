@@ -27,7 +27,7 @@ export const GRADES = {
 
 const getBaseUrl = () => {
   // Your computer's current Network IP (found via ifconfig)
-  const MACHINE_IP = '10.122.159.181'; 
+  const MACHINE_IP = '10.122.73.153'; 
 
   // For both iOS and Android physical devices (Expo Go), use the MACHINE_IP.
   // The Android Emulator (10.0.2.2) also works with the MACHINE_IP as long as Django is running on 0.0.0.0.

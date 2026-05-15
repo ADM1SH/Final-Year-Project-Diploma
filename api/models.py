@@ -110,6 +110,13 @@ class Item(models.Model):
     has_dents_cracks = models.BooleanField(default=False)
     has_original_box = models.BooleanField(default=False)
     has_receipt = models.BooleanField(default=False)
+    
+    # Expanded grading fields
+    is_clean = models.BooleanField(default=True, help_text="Item is free of stains, dust, or odors")
+    has_all_accessories = models.BooleanField(default=True, help_text="Includes all original chargers, cables, or parts")
+    has_repair_history = models.BooleanField(default=False, help_text="Item has been repaired before")
+    battery_health_good = models.BooleanField(default=True, help_text="Battery lasts a reasonable time (if applicable)")
+    is_modified = models.BooleanField(default=False, help_text="Item has been customized or altered from original state")
 
     calculated_grade = models.CharField(max_length=1, choices=Grade.choices, db_index=True, blank=True)
     is_sold = models.BooleanField(default=False, db_index=True)
@@ -123,12 +130,26 @@ class Item(models.Model):
     def calculate_grade(self):
         # Determine condition grade.
         # Points result in grades A through D.
+        # Max score: 100
         score = 0
+        
+        # Primary Functionality (40 points)
         if self.is_fully_functional: score += 40
-        if not self.has_scratches: score += 20
-        if not self.has_dents_cracks: score += 20
-        if self.has_original_box: score += 10
-        if self.has_receipt: score += 10
+        
+        # Cosmetic & Physical (20 points)
+        if not self.has_scratches: score += 10
+        if not self.has_dents_cracks: score += 10
+        
+        # Provenance (10 points)
+        if self.has_original_box: score += 5
+        if self.has_receipt: score += 5
+        
+        # Maintenance & Usage (30 points)
+        if self.is_clean: score += 10
+        if self.has_all_accessories: score += 5
+        if not self.has_repair_history: score += 5
+        if self.battery_health_good: score += 5
+        if not self.is_modified: score += 5
 
         if score >= 90: return self.Grade.A
         if score >= 70: return self.Grade.B

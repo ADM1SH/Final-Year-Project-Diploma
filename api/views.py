@@ -92,6 +92,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.select_related('user').all()
     serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
+    search_fields = ['user__username']
+    ordering_fields = ['trust_score']
 
     @action(detail=False, methods=['get'])
     def marketplace_stats(self, request):
@@ -184,7 +186,16 @@ class MessageViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_anonymous:
             user = User.objects.first()
-        return Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver', 'item')
+        
+        queryset = Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver', 'item')
+        
+        # Support filtering by a specific partner for the ChatDetail screen
+        partner_name = self.request.query_params.get('partner')
+        if partner_name:
+            queryset = queryset.filter(
+                Q(sender__username=partner_name) | Q(receiver__username=partner_name)
+            )
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -235,6 +246,26 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         if user.is_anonymous:
             user = User.objects.first()
         return Notification.objects.filter(user=user)
+
+    @action(detail=False, methods=['post'])
+    def broadcast(self, request):
+        # Allow superadmin to send a system-wide alert
+        if not request.user.is_superuser:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        title = request.data.get('title')
+        content = request.data.get('content')
+        
+        if not title or not content:
+            return Response({'error': 'Title and content required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        users = User.objects.all()
+        notifications = [
+            Notification(user=u, title=title, content=content) for u in users
+        ]
+        Notification.objects.bulk_create(notifications)
+        
+        return Response({'status': f'Broadcast sent to {len(users)} users.'})
 
     @action(detail=True, methods=['post'])
     def mark_as_read(self, request, pk=None):

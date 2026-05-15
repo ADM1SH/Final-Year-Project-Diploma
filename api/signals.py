@@ -5,7 +5,27 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import Profile, Transaction, Message, Notification, Review
+from .models import Profile, Transaction, Message, Notification, Review, Favorite, Item
+
+@receiver(post_save, sender=Favorite)
+def notify_on_favorite(sender, instance, created, **kwargs):
+    # Notify sellers when their item is favorited.
+    if created:
+        Notification.objects.create(
+            user=instance.item.seller,
+            title="New Favorite!",
+            content=f"Someone liked your {instance.item.name}."
+        )
+
+@receiver(post_save, sender=Item)
+def notify_on_listing(sender, instance, created, **kwargs):
+    # System alert when a new listing is created.
+    if created:
+        Notification.objects.create(
+            user=instance.seller,
+            title="Listing Live!",
+            content=f"Your {instance.item.name if hasattr(instance, 'item') else instance.name} is now visible to buyers."
+        )
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

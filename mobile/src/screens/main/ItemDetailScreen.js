@@ -16,10 +16,11 @@ export const ItemDetailScreen = ({ route, navigation }) => {
         const res = await api.get(`items/${itemId}/`);
         setItem(res.data);
       } catch (e) {
-        // Mock data fallback
+        // Mock data fallback for presentation reliability
         const mockItems = {
-          1: { id: 1, name: 'Vintage Leather Satchel', price: '85.00', calculated_grade: 'A', description: 'A timeless piece from the 1990s, meticulously cared for. This satchel features premium top-grain leather that has aged beautifully. All zippers are original and functional. Perfect for daily use.', seller: { username: 'Elena Rodriguez' }, images: [{ image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop' }], eco_impact: 12.4, is_negotiable: true },
-          2: { id: 2, name: 'Heritage Grain Jacket', price: '185.00', calculated_grade: 'B', description: 'Tough, heritage grain leather jacket. Minor wear on the cuffs but otherwise in excellent condition.', seller: { username: 'Marcus Chen' }, images: [{ image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800&auto=format&fit=crop' }], eco_impact: 15.2, is_negotiable: false }
+          1: { id: 1, name: 'Vintage Leather Satchel', price: '85.00', calculated_grade: 'A', description: 'Beg kulit vintaj yang dijaga rapi. Sangat tahan lasak dan sesuai untuk kegunaan harian. Lokasi: Shah Alam.', seller: { username: 'ahmadzaki' }, display_image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop', eco_impact: 12.4, is_negotiable: true },
+          2: { id: 2, name: 'Denim Trucker Jacket', price: '120.00', calculated_grade: 'B', description: 'Jaket denim klasik pudar gaya vintaj. Lokasi: Bangi.', seller: { username: 'nurulizzah' }, display_image: 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop', eco_impact: 8.2, is_negotiable: false },
+          3: { id: 3, name: 'Fujifilm X-T3 Camera', price: '2850.00', calculated_grade: 'A', description: 'Kamera digital mirrorless professional. Lokasi: Kuala Lumpur.', seller: { username: 'farhanrosli' }, display_image: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop', eco_impact: 45.0, is_negotiable: true }
         };
         setItem(mockItems[itemId] || mockItems[1]);
       } finally {

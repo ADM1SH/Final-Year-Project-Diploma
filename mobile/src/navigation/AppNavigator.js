@@ -75,6 +75,7 @@ const AppStack = () => (
     <Stack.Screen name="MainTabs" component={MainTabs} />
     <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
     <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+    <Stack.Screen name="UserProfile" component={ProfileScreen} />
     <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
     <Stack.Screen name="AdminUserManagement" component={AdminUserManagementScreen} />
     <Stack.Screen name="AdminItemManagement" component={AdminItemManagementScreen} />

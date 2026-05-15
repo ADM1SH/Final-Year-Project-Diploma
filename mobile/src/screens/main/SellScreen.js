@@ -22,39 +22,54 @@ export const SellScreen = ({ navigation }) => {
     has_dents_cracks: false,
     has_original_box: false,
     has_receipt: false,
+    is_clean: true,
+    has_all_accessories: true,
+    has_repair_history: false,
+    battery_health_good: true,
+    is_modified: false,
   });
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+        return;
+      }
 
-    let result = await ImagePicker.launchImageLibraryAsync({ 
-      mediaTypes: ImagePicker.MediaType.IMAGES, 
-      quality: 0.7,
-      allowsMultipleSelection: true
-    });
-    if (!result.canceled) {
-      const newImages = result.assets.map(a => a.uri);
-      setImages([...images, ...newImages]);
+      let result = await ImagePicker.launchImageLibraryAsync({ 
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        quality: 0.7,
+        allowsMultipleSelection: true
+      });
+      
+      if (!result.canceled) {
+        const newImages = result.assets.map(a => a.uri);
+        setImages([...images, ...newImages]);
+      }
+    } catch (err) {
+      Alert.alert("Error", "Could not open gallery.");
     }
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera permissions to make this work!');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Sorry, we need camera permissions to make this work!');
+        return;
+      }
 
-    let result = await ImagePicker.launchCameraAsync({
-      quality: 0.7,
-    });
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+      });
 
-    if (!result.canceled) {
-      setImages([...images, result.assets[0].uri]);
+      if (!result.canceled) {
+        setImages([...images, result.assets[0].uri]);
+      }
+    } catch (err) {
+      Alert.alert("Error", "Could not open camera.");
     }
   };
 
@@ -145,37 +160,53 @@ export const SellScreen = ({ navigation }) => {
       { id: 'is_fully_functional', label: 'Fully Functional', desc: 'No internal hardware/software issues' },
       { id: 'has_scratches', label: 'Cosmetic Scratches', desc: 'Visible marks on the exterior' },
       { id: 'has_dents_cracks', label: 'Dents or Cracks', desc: 'Impact damage to the body or screen' },
+      { id: 'is_clean', label: 'Cleanliness', desc: 'Free of stains, dust, or odors' },
+      { id: 'has_all_accessories', label: 'All Accessories', desc: 'Includes all original chargers or parts' },
+      { id: 'battery_health_good', label: 'Good Battery Health', desc: 'Battery holds charge well' },
+      { id: 'has_repair_history', label: 'No Repair History', desc: 'Never been opened or repaired' },
+      { id: 'is_modified', label: 'Original State', desc: 'No customizations or alterations' },
       { id: 'has_original_box', label: 'Original Packaging', desc: 'Comes with original box/tags' },
-      { id: 'has_receipt', label: 'Proof of Purchase', desc: 'Valid receipt or invoice available' },
+      { id: 'has_receipt', label: 'Proof of Purchase', desc: 'Valid receipt available' },
     ];
 
     return (
       <View>
         <View style={styles.stepHeader}>
           <Text style={styles.stepTitle}>Item Condition Survey</Text>
-          <Text style={styles.stepSub}>Answer these questions to automatically calculate your item's Grade.</Text>
+          <Text style={styles.stepSub}>Select all that apply to calculate your item's Grade.</Text>
         </View>
 
-        {surveyItems.map(item => (
-          <TouchableOpacity 
-            key={item.id} 
-            style={[styles.surveyCard, formData[item.id] && styles.activeSurveyCard]}
-            onPress={() => setFormData({...formData, [item.id]: !formData[item.id]})}
-          >
-            <View style={styles.surveyInfo}>
-              <Text style={styles.surveyLabel}>{item.label}</Text>
-              <Text style={styles.surveyDesc}>{item.desc}</Text>
-            </View>
-            <View style={[styles.surveyCheckbox, formData[item.id] && styles.surveyCheckboxChecked]}>
-              {formData[item.id] && <Ionicons name="checkmark" size={16} color="white"/>}
-            </View>
-          </TouchableOpacity>
-        ))}
+        {surveyItems.map(item => {
+          // Special logic: some items are "positive" (is_clean), some are "negative" (has_scratches)
+          // The UI should reflect the "current state" of the formData
+          const isActive = item.id === 'has_scratches' || item.id === 'has_dents_cracks' || item.id === 'is_modified' || item.id === 'has_repair_history' 
+                           ? !formData[item.id] 
+                           : formData[item.id];
+
+          return (
+            <TouchableOpacity 
+              key={item.id} 
+              style={[styles.surveyCard, isActive && styles.activeSurveyCard]}
+              onPress={() => {
+                setFormData({...formData, [item.id]: !formData[item.id]});
+              }}
+            >
+              <View style={styles.surveyInfo}>
+                <Text style={styles.surveyLabel}>{item.label}</Text>
+                <Text style={styles.surveyDesc}>{item.desc}</Text>
+              </View>
+              <View style={[styles.surveyCheckbox, isActive && styles.surveyCheckboxChecked]}>
+                {isActive && <Ionicons name="checkmark" size={16} color="white"/>}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
 
         <View style={styles.gradePreview}>
           <Text style={styles.previewLabel}>Auto-Calculated Grade:</Text>
           <View style={styles.previewBadge}>
-            <Text style={styles.previewGrade}>GRADE A</Text>
+            <Ionicons name="sparkles" size={14} color="white" style={{marginRight: 5}}/>
+            <Text style={styles.previewGrade}>DYNAMIC ESTIMATE</Text>
           </View>
         </View>
 
@@ -256,7 +287,7 @@ const styles = StyleSheet.create({
   surveyCheckboxChecked: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   gradePreview: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.lightGray, padding: 15, borderRadius: 12, marginVertical: 20 },
   previewLabel: { fontSize: 14, fontWeight: '600' },
-  previewBadge: { backgroundColor: COLORS.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  previewBadge: { backgroundColor: COLORS.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', alignItems: 'center' },
   previewGrade: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   submitButton: { backgroundColor: COLORS.primary, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   submitButtonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },

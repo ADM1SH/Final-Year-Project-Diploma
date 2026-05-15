@@ -1,30 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
-
-const MOCK_CHATS = [
-  { id: '1', name: 'Elena Thorne', message: 'Is the Grade A Cashmere Sweater still available for pick up tomorrow?', time: '14:20', unread: 1, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' },
-  { id: '2', name: 'Marcus Chen', message: 'Thanks again! The packaging was so thoughtful. Love the eco-wrap.', time: 'Yesterday', unread: 0, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop' },
-  { id: '3', name: 'Sarah Jenkins', message: 'Sent a photo', time: 'Tue', unread: 0, avatar: 'https://images.unsplash.com/photo-1438733002223-b57a84b1f1bf?q=80&w=150&auto=format&fit=crop' },
-  { id: '4', name: 'David Brook', message: "I'll leave it at the doorstep with the security code we discussed.", time: 'Mon', unread: 0, avatar: null },
-  { id: '5', name: 'Julian Rossi', message: 'Just confirmed the Carbon Saved badge on the listing!', time: 'Mon', unread: 2, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop' },
-];
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/client';
 
 export const ChatListScreen = ({ navigation }) => {
+  const { user } = useAuth();
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchChats = async () => {
+    try {
+      const res = await api.get('messages/');
+      const messages = res.data.results || res.data;
+      
+      // Group messages by conversation partner
+      const conversations = {};
+      messages.forEach(m => {
+        const partnerName = m.sender_name === user?.username ? m.receiver_name : m.sender_name;
+        if (!conversations[partnerName] || new Date(m.timestamp) > new Date(conversations[partnerName].timestamp)) {
+          conversations[partnerName] = {
+            id: m.id,
+            name: partnerName,
+            message: m.content,
+            time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            unread: m.is_read ? 0 : (m.receiver_name === user?.username ? 1 : 0),
+            timestamp: m.timestamp
+          };
+        }
+      });
+
+      setChats(Object.values(conversations).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    } catch (err) {
+      console.error('Fetch Chats Error:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchChats();
+    }, [user])
+  );
+
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.chatItem} 
       onPress={() => navigation.navigate('ChatDetail', { userName: item.name })}
     >
       <View style={styles.avatarContainer}>
-        {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.placeholderAvatar]}>
-            <Text style={styles.avatarInitial}>{item.name[0]}</Text>
-          </View>
-        )}
+        <View style={[styles.avatar, styles.placeholderAvatar]}>
+          <Text style={styles.avatarInitial}>{item.name?.[0]?.toUpperCase() || '?'}</Text>
+        </View>
         {item.unread > 0 && <View style={styles.onlineDot} />}
       </View>
       <View style={styles.chatInfo}>
@@ -46,7 +76,9 @@ export const ChatListScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logoText}>MyPrelove</Text>
-        <TouchableOpacity><Ionicons name="camera-outline" size={24} color={COLORS.black}/></TouchableOpacity>
+        <TouchableOpacity onPress={fetchChats}>
+          <Ionicons name="reload" size={20} color={COLORS.black}/>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchSection}>
@@ -56,17 +88,22 @@ export const ChatListScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.toggleSection}>
-        <TouchableOpacity style={[styles.toggleBtn, styles.activeToggle]}><Text style={styles.activeToggleText}>Buying</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.toggleBtn}><Text style={styles.toggleText}>Selling</Text></TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={MOCK_CHATS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
+      ) : (
+        <FlatList
+          data={chats}
+          renderItem={renderItem}
+          keyExtractor={item => item.name}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="chatbubbles-outline" size={60} color={COLORS.lightGray} />
+              <Text style={styles.emptyText}>No active conversations yet.</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -78,17 +115,12 @@ const styles = StyleSheet.create({
   searchSection: { padding: 20 },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.lightGray, borderRadius: 12, paddingHorizontal: 15, height: 45 },
   searchInput: { marginLeft: 10, flex: 1, fontSize: 15 },
-  toggleSection: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 10 },
-  toggleBtn: { flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: COLORS.lightGray },
-  activeToggle: { borderBottomColor: '#064E3B' },
-  activeToggleText: { color: '#064E3B', fontWeight: 'bold' },
-  toggleText: { color: COLORS.gray },
   list: { paddingBottom: 100 },
   chatItem: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 15, alignItems: 'center' },
   avatarContainer: { position: 'relative' },
   avatar: { width: 56, height: 56, borderRadius: 28 },
-  placeholderAvatar: { backgroundColor: COLORS.lightGray, justifyContent: 'center', alignItems: 'center' },
-  avatarInitial: { fontSize: 20, fontWeight: 'bold', color: COLORS.gray },
+  placeholderAvatar: { backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  avatarInitial: { fontSize: 20, fontWeight: 'bold', color: '#064E3B' },
   onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: COLORS.success, borderWidth: 2, borderColor: 'white' },
   chatInfo: { flex: 1, marginLeft: 15 },
   chatHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
@@ -97,5 +129,7 @@ const styles = StyleSheet.create({
   messageRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   chatMessage: { fontSize: 14, color: COLORS.gray, flex: 1 },
   badge: { backgroundColor: COLORS.danger, width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
-  badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' }
+  badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  emptyContainer: { alignItems: 'center', marginTop: 100 },
+  emptyText: { color: COLORS.gray, marginTop: 10 }
 });

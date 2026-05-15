@@ -1,7 +1,7 @@
 import os
 
 def create_demo_data():
-    """Script to populate the database with superadmin, multiple demo users and Malaysian product data."""
+    """Script to populate the database with multiple demo users and product data in English."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
     import django
     django.setup()
@@ -38,6 +38,7 @@ def create_demo_data():
         user.set_password(password)
         user.save()
         
+        # Ensure verified profile exists
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.is_verified = True
         profile.save()
@@ -51,7 +52,7 @@ def create_demo_data():
     admin_user.save()
     Profile.objects.get_or_create(user=admin_user, defaults={'is_verified': True})
 
-    # 3. Create Sample Items
+    # 3. Create Sample Items assigned to different users
     category_men = Category.objects.get(name='Men')
     category_tech = Category.objects.get(name='Tech')
     category_women = Category.objects.get(name='Women')
@@ -62,7 +63,7 @@ def create_demo_data():
         seller=User.objects.get(username='ahmadzaki'),
         category=category_men,
         price=85.00,
-        description='Beg kulit vintaj yang dijaga rapi. Lokasi: Shah Alam.',
+        description='Meticulously cared for vintage leather bag. Extremely durable. Location: Shah Alam.',
         is_fully_functional=True,
         has_original_box=True,
         eco_impact=12.4
@@ -74,14 +75,37 @@ def create_demo_data():
         seller=User.objects.get(username='farhanrosli'),
         category=category_tech,
         price=2850.00,
-        description='Kamera digital mirrorless professional. Lokasi: Kuala Lumpur.',
+        description='Professional mirrorless digital camera. Lens 18-55mm included. Location: Kuala Lumpur.',
         is_fully_functional=True,
         has_scratches=False,
         eco_impact=45.0
     )
+    
+    # Item 3 (Nurul)
+    Item.objects.create(
+        name='Denim Trucker Jacket',
+        seller=User.objects.get(username='nurulizzah'),
+        category=category_men,
+        price=120.00,
+        description='Classic denim jacket with a perfect vintage fade. Location: Bangi.',
+        is_fully_functional=True,
+        has_scratches=True,
+        eco_impact=8.2
+    )
 
-    print("✅ Superadmin account set: username 'superadmin', password 'password123'")
-    print("✅ All demo data created successfully!")
+    # Item 4 (Siti)
+    Item.objects.create(
+        name='Designer Silk Scarf',
+        seller=User.objects.get(username='sitiaminah'),
+        category=category_women,
+        price=150.00,
+        description='Custom designed silk scarf, never worn. Location: Cyberjaya.',
+        is_fully_functional=True,
+        has_receipt=True,
+        eco_impact=2.5
+    )
+
+    print("✅ All demo data updated to English successfully!")
 
 if __name__ == "__main__":
     create_demo_data()

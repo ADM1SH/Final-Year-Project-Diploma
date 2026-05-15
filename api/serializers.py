@@ -76,7 +76,7 @@ class ItemImageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+            return f"http://10.122.73.153:8000{obj.image.url}"
         return None
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -112,13 +112,13 @@ class ItemSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(first_image.image.url)
-            # Fallback for when request context is missing
-            return first_image.image.url
+            # FORCE absolute URL for mobile apps even if request context is missing
+            return f"http://10.122.159.181:8000{first_image.image.url}"
         
         # Fallback to high-quality Unsplash images based on category
         fallbacks = {
-            'Men': 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop',
-            'Women': 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
+            'Men': 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
+            'Women': 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=800&auto=format&fit=crop',
             'Tech': 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop',
             'Books': 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop'
         }
