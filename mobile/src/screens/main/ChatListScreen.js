@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,22 +7,40 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 
 export const ChatListScreen = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // We need the current user's ID to correctly identify the partner
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await api.get('profiles/');
+        const myProfile = res.data.results ? res.data.results.find(p => p.username === user?.username) : res.data.find(p => p.username === user?.username);
+        if (myProfile) setCurrentUserId(myProfile.id);
+      } catch (e) {}
+    };
+    if (user) fetchMe();
+  }, [user]);
 
   const fetchChats = async () => {
     try {
       const res = await api.get('messages/');
       const messages = res.data.results || res.data;
-      
+
       // Group messages by conversation partner
       const conversations = {};
       messages.forEach(m => {
-        const partnerName = m.sender_name === user?.username ? m.receiver_name : m.sender_name;
-        if (!conversations[partnerName] || new Date(m.timestamp) > new Date(conversations[partnerName].timestamp)) {
-          conversations[partnerName] = {
+        const isMeSender = m.sender_name === user?.username;
+        const partnerName = isMeSender ? m.receiver_name : m.sender_name;
+        const partnerId = isMeSender ? m.receiver : m.sender;
+
+        if (!conversations[partnerId] || new Date(m.timestamp) > new Date(conversations[partnerId].timestamp)) {
+          conversations[partnerId] = {
             id: m.id,
+            partnerId: partnerId,
             name: partnerName,
             message: m.content,
             time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -49,7 +67,7 @@ export const ChatListScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.chatItem} 
-      onPress={() => navigation.navigate('ChatDetail', { userName: item.name })}
+      onPress={() => navigation.navigate('ChatDetail', { userName: item.name, userId: item.partnerId })}
     >
       <View style={styles.avatarContainer}>
         <View style={[styles.avatar, styles.placeholderAvatar]}>

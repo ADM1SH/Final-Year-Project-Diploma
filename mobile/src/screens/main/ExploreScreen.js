@@ -45,6 +45,9 @@ export const ExploreScreen = ({ navigation }) => {
   }, [searchQuery, activeTab]);
 
   const filteredItems = items.filter(item => {
+    // Only show items that are NOT sold
+    if (item.is_sold) return false;
+    
     const matchesCategory = !selectedCategory || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -61,10 +64,10 @@ export const ExploreScreen = ({ navigation }) => {
       </View>
       <View style={styles.userInfo}>
         <Text style={styles.usernameText}>{item.username}</Text>
-        <div style={styles.userMeta}>
+        <View style={styles.userMeta}>
           <Ionicons name="shield-checkmark" size={12} color={COLORS.primary} />
           <Text style={styles.trustScoreText}>Trust Score: {item.trust_score}%</Text>
-        </div>
+        </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
     </TouchableOpacity>
@@ -125,7 +128,8 @@ export const ExploreScreen = ({ navigation }) => {
               {categories.map(cat => (
                 <CategoryChip 
                   key={cat.id} 
-                  name={cat.name} 
+                  name={cat.name}
+                  icon={cat.icon_name}
                   active={selectedCategory === cat.id} 
                   onPress={() => setSelectedCategory(cat.id)} 
                 />
@@ -147,6 +151,10 @@ export const ExploreScreen = ({ navigation }) => {
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}
             contentContainerStyle={styles.itemList}
+            initialNumToRender={6}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
             ListHeaderComponent={
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>
@@ -169,8 +177,8 @@ export const ExploreScreen = ({ navigation }) => {
               contentContainerStyle={styles.userList}
               ListHeaderComponent={
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Sellers in Cyberjaya</Text>
-                  <Text style={styles.sectionSubtitle}>{userResults.length} community members found</Text>
+                  <Text style={styles.sectionTitle}>Marketplace Community</Text>
+                  <Text style={styles.sectionSubtitle}>{userResults.length} members found</Text>
                 </View>
               }
               ListEmptyComponent={
@@ -206,8 +214,13 @@ const styles = StyleSheet.create({
   categoryContainer: { paddingVertical: 15, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   categoryList: { paddingHorizontal: 20 },
   sectionHeader: { paddingHorizontal: 20, marginTop: 25, marginBottom: 15 },
+  sectionHeaderTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#111827' },
   sectionSubtitle: { fontSize: 13, color: COLORS.gray, marginTop: 4 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  activeFilterChip: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  filterChipText: { fontSize: 12, fontWeight: '600', color: COLORS.primary, marginLeft: 4 },
+  activeFilterChipText: { color: 'white' },
   itemList: { paddingBottom: 100 },
   columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 20 },
   userList: { paddingBottom: 100 },

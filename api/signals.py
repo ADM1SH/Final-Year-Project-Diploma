@@ -51,6 +51,10 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
         )
     
     if instance.status == 'COMPLETED':
+        # Mark item as sold
+        instance.item.is_sold = True
+        instance.item.save()
+
         instance.seller.profile.recalculate_trust_score()
         Notification.objects.create(
             user=instance.seller,

@@ -4,30 +4,10 @@ import api from '../api/client';
 
 const MarketContext = createContext();
 
-const INITIAL_ITEMS = [
-  { 
-    id: 1, name: 'Vintage Leather Satchel', price: '85.00', calculated_grade: 'A', 
-    display_image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 12.4, seller: { username: 'Ahmad Zaki' }, description: 'Meticulously cared for vintage leather bag. Extremely durable. Location: Shah Alam.'
-  },
-  { 
-    id: 2, name: 'Denim Trucker Jacket', price: '120.00', calculated_grade: 'B', 
-    display_image: 'https://images.unsplash.com/photo-1576995853123-5a103055b1c0?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 8.2, seller: { username: 'Nurul Izzah' }, description: 'Classic denim jacket with a perfect vintage fade. Location: Bangi.'
-  },
-  { 
-    id: 3, name: 'Fujifilm X-T3 Camera', price: '2850.00', calculated_grade: 'A', 
-    display_image: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop',
-    eco_impact: 45.0, seller: { username: 'Farhan Rosli' }, description: 'Professional mirrorless digital camera. 18-55mm lens included. Location: Kuala Lumpur.'
-  }
-];
-
 export const MarketProvider = ({ children }) => {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Men' }, { id: 2, name: 'Women' }, { id: 3, name: 'Tech' }, { id: 4, name: 'Books' }
-  ]);
+  const [categories, setCategories] = useState([]);
 
   const refreshMarket = async () => {
     try {
@@ -42,8 +22,8 @@ export const MarketProvider = ({ children }) => {
       const itemsData = itemRes.data.results || itemRes.data;
       const favsData = favRes.data.results || favRes.data;
 
-      if (cats && cats.length > 0) setCategories(cats);
-      if (itemsData && itemsData.length > 0) setItems(itemsData);
+      if (cats) setCategories(cats);
+      if (itemsData) setItems(itemsData);
       if (favsData) setFavorites(favsData.map(f => f.item));
       
       console.log('Market refreshed successfully.');
@@ -71,11 +51,12 @@ export const MarketProvider = ({ children }) => {
       id: Date.now(),
       name: formData.name,
       price: formData.price,
+      weight: formData.weight || 0,
       category: formData.category,
       calculated_grade: formData.calculated_grade || 'A',
       display_image: localImages.length > 0 ? localImages[0] : null,
       images: localImages.map(uri => ({ image: uri })),
-      eco_impact: (parseFloat(formData.price || 0) * 0.15).toFixed(1),
+      eco_impact: (parseFloat(formData.weight || 0) * 2.5).toFixed(1),
       seller: { username: 'adamanwar' },
       description: formData.description
     };

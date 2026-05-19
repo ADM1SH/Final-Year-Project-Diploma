@@ -76,13 +76,16 @@ class ItemImageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.image.url)
-            return f"http://10.122.73.153:8000{obj.image.url}"
+            # Fallback to relative path if request is missing (should be handled by client)
+            return obj.image.url
         return None
 
 class ItemSerializer(serializers.ModelSerializer):
     # Detailed item data structure. 
     # Manage image uploads and grade display.
     seller_name = serializers.CharField(source='seller.username', read_only=True)
+    seller_trust_score = serializers.FloatField(source='seller.profile.trust_score', read_only=True)
+    seller_sales_count = serializers.SerializerMethodField()
     category_name = serializers.CharField(source='category.name', read_only=True)
     images = ItemImageSerializer(many=True, read_only=True)
     display_image = serializers.SerializerMethodField()
@@ -97,13 +100,17 @@ class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = (
-            'id', 'seller', 'seller_name', 'category', 'category_name',
-            'name', 'description', 'price', 'eco_impact', 'is_negotiable',
+            'id', 'seller', 'seller_name', 'seller_trust_score', 'seller_sales_count',
+            'category', 'category_name',
+            'name', 'description', 'price', 'weight', 'eco_impact', 'is_negotiable',
             'is_fully_functional', 'has_scratches', 'has_dents_cracks', 
             'has_original_box', 'has_receipt',
             'calculated_grade', 'is_sold', 'images', 'display_image', 'uploaded_images', 'created_at'
         )
         read_only_fields = ('seller', 'calculated_grade', 'images')
+
+    def get_seller_sales_count(self, obj):
+        return obj.seller.sales.filter(status='COMPLETED').count()
 
     def get_display_image(self, obj):
         # Return first image if available
@@ -112,8 +119,7 @@ class ItemSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(first_image.image.url)
-            # FORCE absolute URL for mobile apps even if request context is missing
-            return f"http://10.122.159.181:8000{first_image.image.url}"
+            return first_image.image.url
         
         # Fallback to high-quality Unsplash images based on category
         fallbacks = {
@@ -146,15 +152,35 @@ class TransactionSerializer(serializers.ModelSerializer):
     buyer_name = serializers.CharField(source='buyer.username', read_only=True)
     seller_name = serializers.CharField(source='seller.username', read_only=True)
     item_name = serializers.CharField(source='item.name', read_only=True)
+    item_id = serializers.IntegerField(source='item.id', read_only=True)
+    item_display_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
         fields = (
-            'id', 'item', 'item_name', 'buyer', 'buyer_name', 
-            'seller', 'seller_name', 'final_price', 'status', 
+            'id', 'item', 'item_id', 'item_name', 'item_display_image', 'buyer', 'buyer_name', 
+            'seller', 'seller_name', 'final_price', 'offer_price', 'payment_method', 'status', 
             'created_at', 'updated_at'
         )
-        read_only_fields = ('buyer', 'seller')
+        read_only_fields = ('buyer', 'seller', 'final_price')
+
+    def get_item_display_image(self, obj):
+        # Return first image if available
+        first_image = obj.item.images.first()
+        if (first_image and first_image.image):
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(first_image.image.url)
+            return first_image.image.url
+        
+        # Fallback to high-quality Unsplash images based on category
+        fallbacks = {
+            'Men': 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop',
+            'Women': 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=800&auto=format&fit=crop',
+            'Tech': 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=800&auto=format&fit=crop',
+            'Books': 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop'
+        }
+        return fallbacks.get(obj.item.category.name if obj.item.category else 'Tech', 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=800&auto=format&fit=crop')
 
 
 class MessageSerializer(serializers.ModelSerializer):

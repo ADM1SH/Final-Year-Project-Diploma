@@ -9,6 +9,7 @@ import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { ExploreScreen } from '../screens/main/ExploreScreen';
 import { ItemDetailScreen } from '../screens/main/ItemDetailScreen';
+import { CheckoutScreen } from '../screens/main/CheckoutScreen';
 import { UpdatesScreen } from '../screens/main/UpdatesScreen';
 import { SellScreen } from '../screens/main/SellScreen';
 import { ChatListScreen } from '../screens/main/ChatListScreen';
@@ -23,57 +24,108 @@ const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 import { Ionicons } from '@expo/vector-icons';
+import api from '../api/client';
 
-const MainTabs = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarActiveTintColor: '#064E3B',
-      tabBarInactiveTintColor: COLORS.gray,
-      tabBarStyle: { height: 75, paddingBottom: 15, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-      headerShown: false,
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
+const MainTabs = () => {
+  const { user } = useAuth();
+  const [unreadNotifs, setUnreadNotifs] = React.useState(0);
+  const [unreadMessages, setUnreadMessages] = React.useState(0);
 
-        if (route.name === 'Home') {
-          iconName = focused ? 'home' : 'home-outline';
-        } else if (route.name === 'Updates') {
-          iconName = focused ? 'notifications' : 'notifications-outline';
-        } else if (route.name === 'Explore') {
-          iconName = focused ? 'compass' : 'compass-outline';
-        } else if (route.name === 'Chat') {
-          iconName = focused ? 'chatbox-ellipses' : 'chatbox-ellipses-outline';
-        } else if (route.name === 'For You') {
-          iconName = focused ? 'person' : 'person-outline';
-        } else if (route.name === 'Sell') {
+  const fetchBadgeCounts = async () => {
+    if (!user) return;
+    try {
+      const [notifRes, msgRes] = await Promise.all([
+        api.get('notifications/'),
+        api.get('messages/')
+      ]);
+      
+      const notifs = notifRes.data.results || notifRes.data;
+      const unreadN = notifs.filter(n => !n.is_read).length;
+      setUnreadNotifs(unreadN);
+
+      const msgs = msgRes.data.results || msgRes.data;
+      // Only count messages where the user is the receiver and they are unread
+      const unreadM = msgs.filter(m => !m.is_read && m.receiver_name === user.username).length;
+      setUnreadMessages(unreadM);
+      
+      if (unreadN > 0 || unreadM > 0) {
+        console.log(`Badges Updated - Notifs: ${unreadN}, Messages: ${unreadM}`);
+      }
+    } catch (e) {
+      console.error('Badge Fetch Error:', e.message);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchBadgeCounts();
+    const interval = setInterval(fetchBadgeCounts, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [user]);
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#064E3B',
+        tabBarInactiveTintColor: COLORS.gray,
+        tabBarStyle: { height: 75, paddingBottom: 15, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          let badgeCount = 0;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Updates') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
+            badgeCount = unreadNotifs;
+          } else if (route.name === 'Explore') {
+            iconName = focused ? 'compass' : 'compass-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbox-ellipses' : 'chatbox-ellipses-outline';
+            badgeCount = unreadMessages;
+          } else if (route.name === 'For You') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Sell') {
+            return (
+              <View style={styles.sellButton}>
+                <Text style={styles.sellButtonText}>+</Text>
+              </View>
+            );
+          }
+
           return (
-            <View style={styles.sellButton}>
-              <Text style={styles.sellButtonText}>+</Text>
+            <View style={{ width: 24, height: 24 }}>
+              <Ionicons name={iconName} size={24} color={color} />
+              {badgeCount > 0 && (
+                <View style={styles.tabBadge}>
+                  <Text style={styles.tabBadgeText}>{badgeCount > 9 ? '9+' : badgeCount}</Text>
+                </View>
+              )}
             </View>
           );
-        }
-
-        return <Ionicons name={iconName} size={24} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="Home" component={ExploreScreen} />
-    <Tab.Screen name="Updates" component={UpdatesScreen} />
-    <Tab.Screen 
-      name="Sell" 
-      component={SellScreen} 
-      options={{ 
-        tabBarLabel: () => null,
-      }}
-    />
-    <Tab.Screen name="Chat" component={ChatListScreen} />
-    <Tab.Screen name="For You" component={ProfileScreen} />
-  </Tab.Navigator>
-);
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={ExploreScreen} />
+      <Tab.Screen name="Updates" component={UpdatesScreen} />
+      <Tab.Screen 
+        name="Sell" 
+        component={SellScreen} 
+        options={{ 
+          tabBarLabel: () => null,
+        }}
+      />
+      <Tab.Screen name="Chat" component={ChatListScreen} />
+      <Tab.Screen name="For You" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 const AppStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="MainTabs" component={MainTabs} />
     <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
+    <Stack.Screen name="Checkout" component={CheckoutScreen} />
     <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
     <Stack.Screen name="UserProfile" component={ProfileScreen} />
     <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
@@ -100,6 +152,24 @@ const styles = StyleSheet.create({
   sellButtonText: {
     color: COLORS.white,
     fontSize: 30,
+    fontWeight: 'bold',
+  },
+  tabBadge: {
+    position: 'absolute',
+    right: -6,
+    top: -3,
+    backgroundColor: COLORS.danger,
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'white',
+  },
+  tabBadgeText: {
+    color: 'white',
+    fontSize: 8,
     fontWeight: 'bold',
   }
 });

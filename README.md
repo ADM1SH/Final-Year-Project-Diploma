@@ -70,6 +70,115 @@ The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
 ---
 
+## 🛠️ Major Project Enhancements
+
+The following professional upgrades have been implemented for this final version:
+
+1.  **ABI Trust Model:** Fully automated algorithm calculating seller reputation based on **Integrity** (Verification), **Ability** (Completed Sales), and **Benevolence** (Buyer Ratings).
+2.  **Scientific Eco-Logic:** Transitioned from price-based estimation to **Weight-Based Carbon Calculation** (Weight × 2.5kg CO2 saved), requiring physical weight input for all listings.
+3.  **Real-Time Architecture:** Integrated **Django Signals** and **Frontend Polling** for instant notifications, chat updates, and red tab-bar badges.
+4.  **UI/UX Standardization:** Synchronized item grid layouts across all screens, implemented high-contrast "Negotiable" indicators, and added Grade-specific color branding (A-D).
+5.  **Performance Optimization:** Implemented **FlatList Windowing** and **Hardware Acceleration** to ensure smooth scrolling even with 1,000+ items.
+
+---
+
+## 🚀 Presentation Setup (Bulletproof Connection)
+
+Follow these steps exactly on your presentation day to ensure your phone can talk to your laptop, regardless of the Wi-Fi network.
+
+### 1. Start the Backend
+In your terminal, navigate to the project root and run:
+```bash
+source venv/bin/activate
+python manage.py runserver 0.0.0.0:8000
+```
+
+### 2. Start the Ngrok Tunnel
+In a **new terminal**, run:
+```bash
+ngrok http 8000
+```
+- Copy the **Forwarding** URL (e.g., `https://abcd-123.ngrok-free.app`).
+
+### 3. Update the App Code
+Open `mobile/src/utils/constants.js` and paste your URL into the `NGROK_URL` variable:
+```javascript
+const NGROK_URL = 'https://abcd-123.ngrok-free.app'; // <--- PASTE YOUR URL HERE
+```
+
+### 4. Start the Mobile Client
+In another terminal, run:
+```bash
+cd mobile
+npx expo start
+```
+- Scan the QR code with your phone. **Success!** Your app is now connected via a secure internet tunnel.
+
+---
+
+## 🔑 Demo Credentials
+
+Use these accounts to explore the prototype features.
+
+### 🛡️ Admin Account
+| Username | Password | Role |
+| :--- | :--- | :--- |
+| **`superadmin`** | `password123` | Platform Superuser (Access to Control Center) |
+
+### 👥 User Personas
+| Username | Password | Role / Seller Focus |
+| :--- | :--- | :--- |
+| **`adamanwar`** | `password123` | Primary User (Buyer/Seller) |
+| **`ahmadzaki`** | `password123` | Seller (Vintage Satchels) |
+| **`farhanrosli`** | `password123` | Seller (Tech & Cameras) |
+| **`sitiaminah`** | `password123` | Seller (Luxury & Designer) |
+| **`nurulizzah`** | `password123` | Seller (Fashion & Denim) |
+| **`adamali`** | `password123` | Seller (General Items) |
+
+---
+
+## 🚀 Quick Start Checklist
+1. **Start Backend:** `python manage.py runserver 0.0.0.0:8000`
+2. **Start Mobile:** `npx expo start`
+3. **Reset Data:** Run `python seed.py` to restore categories and default admin if needed.
+
+---
+
+## 📱 Mobile Client Setup (Expo Go)
+
+The mobile application is built with React Native and Expo. Follow these steps to run it on your physical device.
+
+### 1. Prerequisites
+- **Node.js (LTS)** installed on your computer.
+- **Expo Go** app installed on your [iOS](https://apps.apple.com/app/expo-go/id982107779) or [Android](https://play.google.com/store/apps/details?id=host.exp.exponent) device.
+
+### 2. Configure Backend IP
+Ensure the mobile app can reach your backend. Open `mobile/src/utils/constants.js` and update `BASE_URL` with your computer's local IP address:
+```javascript
+export const API_CONFIG = {
+  BASE_URL: 'http://<YOUR_LOCAL_IP>:8000/api/',
+};
+```
+
+### 3. Install Dependencies
+```bash
+cd mobile
+npm install
+```
+
+### 4. Start Expo Server
+```bash
+npx expo start
+```
+
+### 5. Launch on Device
+1. Connect your phone to the **same Wi-Fi network** as your computer.
+2. Scan the QR code displayed in the terminal:
+   - **Android:** Use the "Scan QR Code" feature in the Expo Go app.
+   - **iOS:** Use the system Camera app.
+
+---
+
 ## 🛠️ Core Features & Optimizations (Developer Notes)
 
 ### 1. Robust Relational Database & Logic

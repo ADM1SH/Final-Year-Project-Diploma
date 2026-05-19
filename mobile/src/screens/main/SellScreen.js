@@ -14,6 +14,7 @@ export const SellScreen = ({ navigation }) => {
     name: '', 
     description: '', 
     price: '', 
+    weight: '',
     category: null,
     is_negotiable: false,
     calculated_grade: 'A',
@@ -74,6 +75,18 @@ export const SellScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    const priceNum = parseFloat(formData.price);
+    const weightNum = parseFloat(formData.weight);
+
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Error", "Please enter a valid price greater than 0.");
+      return;
+    }
+    if (isNaN(weightNum) || weightNum <= 0) {
+      Alert.alert("Error", "Please enter a valid weight greater than 0.");
+      return;
+    }
+
     setLoading(true);
     try {
       await addItem(formData, images);
@@ -111,6 +124,15 @@ export const SellScreen = ({ navigation }) => {
       <Text style={styles.label}>What are you listing?</Text>
       <TextInput style={styles.input} placeholder="e.g. Vintage Ceramic Vase" value={formData.name} onChangeText={t => setFormData({...formData, name: t})}/>
       
+      <Text style={styles.label}>Description</Text>
+      <TextInput 
+        style={[styles.input, { height: 100, textAlignVertical: 'top' }]} 
+        placeholder="Describe the condition, history, and why you are selling it..." 
+        multiline
+        value={formData.description} 
+        onChangeText={t => setFormData({...formData, description: t})}
+      />
+
       <Text style={styles.label}>Category</Text>
       <View style={styles.categoryPicker}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -132,6 +154,12 @@ export const SellScreen = ({ navigation }) => {
         <TextInput style={styles.priceInput} placeholder="0.00" keyboardType="numeric" value={formData.price} onChangeText={t => setFormData({...formData, price: t})}/>
       </View>
 
+      <Text style={styles.label}>Estimated Weight (kg)</Text>
+      <View style={styles.priceContainer}>
+        <Ionicons name="barbell-outline" size={18} color={COLORS.gray} style={{marginRight: 8}}/>
+        <TextInput style={styles.priceInput} placeholder="0.0" keyboardType="numeric" value={formData.weight} onChangeText={t => setFormData({...formData, weight: t})}/>
+      </View>
+
       <View style={styles.toggleRow}>
         <View>
           <Text style={styles.toggleLabel}>Negotiable</Text>
@@ -146,9 +174,9 @@ export const SellScreen = ({ navigation }) => {
       </View>
 
       <TouchableOpacity 
-        style={[styles.nextButton, (!formData.name || !formData.price || images.length === 0) && styles.disabledButton]} 
+        style={[styles.nextButton, (!formData.name || !formData.description || !formData.price || !formData.weight || images.length === 0) && styles.disabledButton]} 
         onPress={() => setStep(2)}
-        disabled={!formData.name || !formData.price || images.length === 0}
+        disabled={!formData.name || !formData.description || !formData.price || !formData.weight || images.length === 0}
       >
         <Text style={styles.nextButtonText}>Next: Grading Survey  →</Text>
       </TouchableOpacity>
@@ -268,9 +296,9 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 },
   toggleLabel: { fontSize: 16, fontWeight: 'bold' },
   toggleSub: { fontSize: 12, color: COLORS.gray },
-  switch: { width: 50, height: 28, borderRadius: 14, backgroundColor: COLORS.lightGray, padding: 2 },
-  switchOn: { backgroundColor: COLORS.primary },
-  switchKnob: { width: 24, height: 24, borderRadius: 12, backgroundColor: COLORS.white },
+  switch: { width: 50, height: 28, borderRadius: 14, backgroundColor: COLORS.lightGray, padding: 2, borderWidth: 1, borderColor: '#E5E7EB' },
+  switchOn: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  switchKnob: { width: 22, height: 22, borderRadius: 11, backgroundColor: COLORS.white, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 1 },
   switchKnobOn: { alignSelf: 'flex-end' },
   nextButton: { backgroundColor: COLORS.primary, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   disabledButton: { backgroundColor: COLORS.gray },

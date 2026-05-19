@@ -27,14 +27,14 @@ class ItemImageInline(admin.TabularInline):
 class ItemAdmin(admin.ModelAdmin):
     # Manage marketplace listings. 
     # View grades and condition surveys.
-    list_display = ('name', 'seller', 'category', 'price', 'calculated_grade', 'is_sold', 'created_at')
+    list_display = ('name', 'seller', 'category', 'price', 'weight', 'calculated_grade', 'is_sold', 'created_at')
     list_filter = ('calculated_grade', 'is_sold', 'category')
     search_fields = ('name', 'description', 'seller__username')
     readonly_fields = ('calculated_grade', 'created_at', 'updated_at')
     
     fieldsets = (
         (None, {
-            'fields': ('seller', 'category', 'name', 'description', 'price', 'is_sold')
+            'fields': ('seller', 'category', 'name', 'description', 'price', 'weight', 'is_sold')
         }),
         ('Condition Survey', {
             'fields': ('is_fully_functional', 'has_scratches', 'has_dents_cracks', 'has_original_box', 'has_receipt', 'calculated_grade')

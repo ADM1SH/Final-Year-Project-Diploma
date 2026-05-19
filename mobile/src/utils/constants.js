@@ -26,13 +26,20 @@ export const GRADES = {
 };
 
 const getBaseUrl = () => {
-  // Your computer's current Network IP (found via ifconfig)
-  const MACHINE_IP = '10.122.73.153'; 
+  // 🚀 PRESENTATION TIP: If using Ngrok, paste your URL here:
+  // e.g. const NGROK_URL = 'https://abc-123.ngrok-free.app';
+  const NGROK_URL = 'https://unvillainous-shila-hardheadedly.ngrok-free.dev'; 
 
-  // For both iOS and Android physical devices (Expo Go), use the MACHINE_IP.
-  // The Android Emulator (10.0.2.2) also works with the MACHINE_IP as long as Django is running on 0.0.0.0.
+  if (NGROK_URL) {
+    const url = `${NGROK_URL}/api/`;
+    console.log('🌐 TUNNEL TARGET:', url);
+    return url;
+  }
+
+  // Fallback to local network IP (requires phone and PC on same Wi-Fi)
+  const MACHINE_IP = '10.122.236.226'; 
   const url = `http://${MACHINE_IP}:8000/api/`;
-  console.log('🔗 API TARGET:', url);
+  console.log('🏠 LOCAL TARGET:', url);
   return url;
 };
 

@@ -15,13 +15,24 @@ export const RegisterScreen = ({ navigation }) => {
   });
 
   const handleRegister = async () => {
+    if (!formData.username || !formData.email || !formData.password) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
-    await register({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-    });
-    setLoading(false);
+    try {
+      await register(formData);
+      Alert.alert("Success", "Account created successfully!");
+    } catch (e) {
+      Alert.alert("Error", "Registration failed. Try a different username or email.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

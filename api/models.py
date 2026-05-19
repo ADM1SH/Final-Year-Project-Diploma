@@ -100,6 +100,7 @@ class Item(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    weight = models.FloatField(default=0.0, help_text="Weight of the item in kg")
     
     # New fields for design alignment
     eco_impact = models.FloatField(default=0.0, help_text="CO2 saved in kg")
@@ -158,8 +159,11 @@ class Item(models.Model):
 
     def save(self, *args, **kwargs):
         self.calculated_grade = self.calculate_grade()
-        # Auto-calculate eco impact if not set (approx 10% of price in kg for demo)
-        if self.eco_impact == 0:
+        # Calculate eco impact based on weight (approx 2.5kg of CO2 saved per 1kg of item)
+        if self.weight > 0:
+            self.eco_impact = float(self.weight) * 2.5
+        elif self.eco_impact == 0:
+            # Fallback for old items or if weight is missing
             self.eco_impact = float(self.price) * 0.15
         super().save(*args, **kwargs)
 
@@ -198,11 +202,19 @@ class Transaction(models.Model):
         COMPLETED = 'COMPLETED', 'Completed'
         CANCELLED = 'CANCELLED', 'Cancelled'
 
+    class PaymentMethod(models.TextChoices):
+        CASH = 'CASH', 'Cash on Delivery'
+        TRANSFER = 'TRANSFER', 'Bank Transfer'
+        TNG = 'TNG', 'Touch n Go eWallet'
+        GRABPAY = 'GRABPAY', 'GrabPay'
+
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='transactions')
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='purchases')
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sales')
 
     final_price = models.DecimalField(max_digits=10, decimal_places=2)
+    offer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

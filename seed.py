@@ -18,6 +18,8 @@ def create_demo_data():
         'Women': 'woman',
         'Tech': 'laptop-outline',
         'Books': 'book-outline',
+        'Home & Living': 'home-outline',
+        'Luxury': 'diamond-outline',
     }
     for name, icon in cats.items():
         Category.objects.update_or_create(name=name, defaults={'icon_name': icon})
@@ -38,10 +40,8 @@ def create_demo_data():
         user.set_password(password)
         user.save()
         
-        # Ensure verified profile exists
-        profile, _ = Profile.objects.get_or_create(user=user)
-        profile.is_verified = True
-        profile.save()
+        # Ensure profile exists (starts as unverified for fresh state)
+        Profile.objects.get_or_create(user=user, defaults={'is_verified': False, 'trust_score': 0.0})
 
     # Create SUPERADMIN
     print("👑 Creating Superadmin...")
@@ -63,7 +63,7 @@ def create_demo_data():
         seller=User.objects.get(username='ahmadzaki'),
         category=category_men,
         price=85.00,
-        description='Meticulously cared for vintage leather bag. Extremely durable. Location: Shah Alam.',
+        description='Meticulously cared for vintage leather bag. Extremely durable.',
         is_fully_functional=True,
         has_original_box=True,
         eco_impact=12.4
@@ -75,7 +75,7 @@ def create_demo_data():
         seller=User.objects.get(username='farhanrosli'),
         category=category_tech,
         price=2850.00,
-        description='Professional mirrorless digital camera. Lens 18-55mm included. Location: Kuala Lumpur.',
+        description='Professional mirrorless digital camera. Lens 18-55mm included.',
         is_fully_functional=True,
         has_scratches=False,
         eco_impact=45.0
@@ -87,7 +87,7 @@ def create_demo_data():
         seller=User.objects.get(username='nurulizzah'),
         category=category_men,
         price=120.00,
-        description='Classic denim jacket with a perfect vintage fade. Location: Bangi.',
+        description='Classic denim jacket with a perfect vintage fade.',
         is_fully_functional=True,
         has_scratches=True,
         eco_impact=8.2
@@ -99,7 +99,7 @@ def create_demo_data():
         seller=User.objects.get(username='sitiaminah'),
         category=category_women,
         price=150.00,
-        description='Custom designed silk scarf, never worn. Location: Cyberjaya.',
+        description='Custom designed silk scarf, never worn.',
         is_fully_functional=True,
         has_receipt=True,
         eco_impact=2.5

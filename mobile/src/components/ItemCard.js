@@ -75,10 +75,15 @@ const ItemCard = ({ item, onPress, onToggleFavorite, isFavorite }) => {
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.price}>${item.price || '0'}</Text>
+            <Text style={styles.price}>RM {item.price || '0'}</Text>
           </View>
-          <View style={styles.ecoRow}>
-            <EcoMetric value={ecoImpact} label="kg CO2 saved" />
+          <View style={styles.metaRow}>
+            <EcoMetric value={ecoImpact} label="kg CO2" />
+            {item.is_negotiable && (
+              <View style={styles.negotiableBadge}>
+                <Text style={styles.negotiableText}>NEGOTIABLE</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -166,15 +171,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0D9488',
   },
-  ecoRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 6,
   },
-  ecoText: {
-    fontSize: 11,
-    color: COLORS.gray,
-    marginLeft: 4,
+  negotiableBadge: {
+    backgroundColor: '#D1FAE5', // Light emerald for better visibility
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  negotiableText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#064E3B',
   },
 });
 

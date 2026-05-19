@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +18,12 @@ export const ChatDetailScreen = ({ route, navigation }) => {
       const res = await api.get(`messages/?partner=${userName}`);
       const data = res.data.results || res.data;
       setMessages(data);
+      
+      // Mark messages as read if there are unread ones from the partner
+      const hasUnread = data.some(m => !m.is_read && m.sender_name === userName);
+      if (hasUnread) {
+        await api.post('messages/mark_conversation_read/', { partner: userName });
+      }
     } catch (err) {
       console.error('Fetch Messages Error:', err.message);
     } finally {
@@ -124,7 +130,17 @@ export const ChatDetailScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { paddingTop: 60, paddingBottom: 15, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: COLORS.lightGray },
+  header: { 
+    paddingTop: 50, 
+    paddingBottom: 15, 
+    paddingHorizontal: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    borderBottomWidth: 1, 
+    borderBottomColor: COLORS.lightGray,
+    zIndex: 10
+  },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
   messageList: { padding: 20, paddingBottom: 40 },
   messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 18, marginBottom: 15 },

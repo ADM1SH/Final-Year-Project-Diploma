@@ -2,7 +2,7 @@
 # API Viewsets and Logic for MyPreLove.
 # This file handles requests for authentication, items, and social features.
 
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -73,10 +73,11 @@ class LoginView(ObtainAuthToken):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    # Admin only user management.
+    # Standard user operations.
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -92,8 +93,21 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.select_related('user').all()
     serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
     search_fields = ['user__username']
     ordering_fields = ['trust_score']
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        # Return the profile of the currently logged-in user
+        user = request.user
+        if user.is_anonymous:
+            # Fallback for dev/demo if not logged in
+            user = User.objects.first()
+        
+        profile, created = Profile.objects.get_or_create(user=user)
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def marketplace_stats(self, request):
@@ -110,6 +124,18 @@ class ProfileViewSet(viewsets.ModelViewSet):
         # Return real user-specific stats for the Profile Screen
         profile = self.get_object()
         user = profile.user
+        return self._get_user_stats_response(user, profile)
+
+    @action(detail=False, methods=['get'], url_path='me/user_stats')
+    def me_stats(self, request):
+        # Convenience endpoint for current user's stats
+        user = request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        profile, created = Profile.objects.get_or_create(user=user)
+        return self._get_user_stats_response(user, profile)
+
+    def _get_user_stats_response(self, user, profile):
         return Response({
             'live_listings': user.items.filter(is_sold=False).count(),
             'items_sold': user.sales.filter(status='COMPLETED').count(),
@@ -125,10 +151,20 @@ class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.select_related('seller', 'category').prefetch_related('images').all()
     serializer_class = ItemSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
     
     filterset_fields = ['category', 'calculated_grade', 'is_sold', 'price']
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # If no specific 'is_sold' filter is provided, default to only showing unsold items
+        # This keeps the main feed clean while still allowing history lookups
+        is_sold_filter = self.request.query_params.get('is_sold')
+        if is_sold_filter is None:
+            queryset = queryset.filter(is_sold=False)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -159,20 +195,32 @@ class ItemViewSet(viewsets.ModelViewSet):
 class TransactionViewSet(viewsets.ModelViewSet):
     # Record sales. 
     # Link buyers and sellers via item listings.
-    queryset = Transaction.objects.select_related('item', 'buyer', 'seller').all()
     serializer_class = TransactionSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        return Transaction.objects.filter(Q(buyer=user) | Q(seller=user)).select_related('item', 'buyer', 'seller')
 
     def perform_create(self, serializer):
         item = serializer.validated_data['item']
         user = self.request.user
         if user.is_anonymous:
             user = User.objects.first()
+        
+        # Prevent self-buying
+        if user == item.seller:
+            raise serializers.ValidationError("You cannot buy your own item.")
             
+        offer_price = serializer.validated_data.get('offer_price')
+        final_price = offer_price if offer_price is not None else item.price
+
         serializer.save(
             buyer=user,
             seller=item.seller,
-            final_price=item.price
+            final_price=final_price
         )
 
 
@@ -196,6 +244,24 @@ class MessageViewSet(viewsets.ModelViewSet):
                 Q(sender__username=partner_name) | Q(receiver__username=partner_name)
             )
         return queryset
+
+    @action(detail=False, methods=['post'])
+    def mark_conversation_read(self, request):
+        user = request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        
+        partner_name = request.data.get('partner')
+        if not partner_name:
+            return Response({'error': 'Partner name required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        Message.objects.filter(
+            receiver=user,
+            sender__username=partner_name,
+            is_read=False
+        ).update(is_read=True)
+        
+        return Response({'status': 'messages marked as read'})
 
     def perform_create(self, serializer):
         user = self.request.user

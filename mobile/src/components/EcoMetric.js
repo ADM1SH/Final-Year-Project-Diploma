@@ -15,15 +15,17 @@ const EcoMetric = ({ value, label = "CO2 saved" }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.eco,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
   },
   text: {
     color: COLORS.ecoText,
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
 
