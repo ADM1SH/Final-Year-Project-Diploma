@@ -63,6 +63,11 @@ export const AdminDashboardScreen = ({ navigation }) => {
             <Text style={styles.controlText}>User Accounts</Text>
             <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.controlItem} onPress={() => navigation.navigate('AdminReports')}>
+            <Ionicons name="warning-outline" size={22} color={COLORS.danger} />
+            <Text style={styles.controlText}>User Reports</Text>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.controlItem} onPress={() => navigation.navigate('AdminItemManagement')}>
             <Ionicons name="cube-outline" size={22} color="#10B981" />
             <Text style={styles.controlText}>Marketplace Inventory</Text>

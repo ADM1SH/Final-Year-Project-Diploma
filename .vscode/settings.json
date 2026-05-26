@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/lib/python"
+    ]
+}

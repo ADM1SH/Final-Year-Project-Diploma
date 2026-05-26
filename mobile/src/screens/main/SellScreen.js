@@ -10,6 +10,8 @@ export const SellScreen = ({ navigation }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
+  const scrollRef = React.useRef(null);
+
   const [formData, setFormData] = useState({ 
     name: '', 
     description: '', 
@@ -18,17 +20,23 @@ export const SellScreen = ({ navigation }) => {
     category: null,
     is_negotiable: false,
     calculated_grade: 'A',
-    is_fully_functional: true,
+    is_fully_functional: false,
     has_scratches: false,
     has_dents_cracks: false,
     has_original_box: false,
     has_receipt: false,
-    is_clean: true,
-    has_all_accessories: true,
+    is_clean: false,
+    has_all_accessories: false,
     has_repair_history: false,
-    battery_health_good: true,
+    battery_health_good: false,
     is_modified: false,
   });
+
+  const handleNextStep = () => {
+    setStep(2);
+    // Fix: Ensure we start at the top of the new step
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  };
 
   const pickImage = async () => {
     try {
@@ -175,7 +183,7 @@ export const SellScreen = ({ navigation }) => {
 
       <TouchableOpacity 
         style={[styles.nextButton, (!formData.name || !formData.description || !formData.price || !formData.weight || images.length === 0) && styles.disabledButton]} 
-        onPress={() => setStep(2)}
+        onPress={handleNextStep}
         disabled={!formData.name || !formData.description || !formData.price || !formData.weight || images.length === 0}
       >
         <Text style={styles.nextButtonText}>Next: Grading Survey  →</Text>
@@ -184,32 +192,85 @@ export const SellScreen = ({ navigation }) => {
   );
 
   const renderStep2 = () => {
-    const surveyItems = [
-      { id: 'is_fully_functional', label: 'Fully Functional', desc: 'No internal hardware/software issues' },
-      { id: 'has_scratches', label: 'Cosmetic Scratches', desc: 'Visible marks on the exterior' },
-      { id: 'has_dents_cracks', label: 'Dents or Cracks', desc: 'Impact damage to the body or screen' },
-      { id: 'is_clean', label: 'Cleanliness', desc: 'Free of stains, dust, or odors' },
-      { id: 'has_all_accessories', label: 'All Accessories', desc: 'Includes all original chargers or parts' },
-      { id: 'battery_health_good', label: 'Good Battery Health', desc: 'Battery holds charge well' },
-      { id: 'has_repair_history', label: 'No Repair History', desc: 'Never been opened or repaired' },
-      { id: 'is_modified', label: 'Original State', desc: 'No customizations or alterations' },
-      { id: 'has_original_box', label: 'Original Packaging', desc: 'Comes with original box/tags' },
-      { id: 'has_receipt', label: 'Proof of Purchase', desc: 'Valid receipt available' },
-    ];
+    const selectedCat = categories.find(c => c.id === formData.category);
+    const catName = selectedCat?.name;
+    
+    let surveyItems = [];
+
+    if (catName === 'Tech') {
+      surveyItems = [
+        { id: 'is_fully_functional', label: 'Fully Functional', desc: 'No internal hardware/software issues' },
+        { id: 'battery_health_good', label: 'Good Battery Health', desc: 'Battery holds charge well' },
+        { id: 'has_repair_history', label: 'No Repair History', desc: 'Never been opened or repaired' },
+        { id: 'has_scratches', label: 'Pristine Screen', desc: 'No visible marks on display or body' },
+        { id: 'has_all_accessories', label: 'All Original Parts', desc: 'Includes chargers and cables' },
+        { id: 'has_original_box', label: 'Original Packaging', desc: 'Comes with retail box' },
+      ];
+    } else if (catName === 'Books') {
+      surveyItems = [
+        { id: 'is_clean', label: 'No Markings', desc: 'Pages are free of ink, highlights, or notes' },
+        { id: 'is_fully_functional', label: 'Intact Binding', desc: 'No loose or missing pages' },
+        { id: 'has_scratches', label: 'Crisp Cover', desc: 'No creases, tears, or shelf wear' },
+        { id: 'has_original_box', label: 'Collector Edition', desc: 'Includes slipcase or dust jacket' },
+        { id: 'has_receipt', label: 'First Edition', desc: 'Authenticated first printing' },
+      ];
+    } else {
+      // General categories (Men, Women, Home, Others)
+      surveyItems = [
+        { id: 'is_fully_functional', label: 'Fully Functional', desc: 'Works exactly as intended' },
+        { id: 'is_clean', label: 'Cleanliness', desc: 'Free of stains, dust, or odors' },
+        { id: 'has_scratches', label: 'Surface Condition', desc: 'No visible scratches or cosmetic wear' },
+        { id: 'has_dents_cracks', label: 'No Physical Damage', desc: 'No cracks, dents, or structural issues' },
+        { id: 'has_original_box', label: 'Original State', desc: 'Comes with original tags or packaging' },
+        { id: 'has_all_accessories', label: 'Complete Set', desc: 'Includes all original components' },
+      ];
+    }
+
+    // Logic: The data model is boolean. 
+    // In our new "Clean Start" UI, a checkmark simply means "YES/TRUE" to the label.
+    // We've simplified the labels above to be positive (e.g., "Pristine Screen" instead of "Has Scratches").
+    
+    const calculatePreviewGrade = () => {
+      let score = 0;
+      if (catName === 'Tech') {
+        if (formData.is_fully_functional) score += 40;
+        if (formData.battery_health_good) score += 15;
+        if (formData.has_repair_history) score += 15; // "Check" means NO repair history
+        if (formData.has_scratches) score += 10; // "Check" means Pristine
+        if (formData.has_all_accessories) score += 10;
+        if (formData.has_original_box) score += 10;
+      } else if (catName === 'Books') {
+        if (formData.is_clean) score += 30;
+        if (formData.is_fully_functional) score += 30;
+        if (formData.has_scratches) score += 20;
+        if (formData.has_original_box) score += 10;
+        if (formData.has_receipt) score += 10;
+      } else {
+        if (formData.is_fully_functional) score += 30;
+        if (formData.is_clean) score += 20;
+        if (formData.has_scratches) score += 15;
+        if (formData.has_dents_cracks) score += 15;
+        if (formData.has_original_box) score += 10;
+        if (formData.has_all_accessories) score += 10;
+      }
+
+      if (score >= 90) return 'Grade A';
+      if (score >= 70) return 'Grade B';
+      if (score >= 50) return 'Grade C';
+      return 'Grade D';
+    };
+
+    const previewGrade = calculatePreviewGrade();
 
     return (
       <View>
         <View style={styles.stepHeader}>
-          <Text style={styles.stepTitle}>Item Condition Survey</Text>
+          <Text style={styles.stepTitle}>{catName} Condition Survey</Text>
           <Text style={styles.stepSub}>Select all that apply to calculate your item's Grade.</Text>
         </View>
 
         {surveyItems.map(item => {
-          // Special logic: some items are "positive" (is_clean), some are "negative" (has_scratches)
-          // The UI should reflect the "current state" of the formData
-          const isActive = item.id === 'has_scratches' || item.id === 'has_dents_cracks' || item.id === 'is_modified' || item.id === 'has_repair_history' 
-                           ? !formData[item.id] 
-                           : formData[item.id];
+          const isActive = formData[item.id];
 
           return (
             <TouchableOpacity 
@@ -234,7 +295,7 @@ export const SellScreen = ({ navigation }) => {
           <Text style={styles.previewLabel}>Auto-Calculated Grade:</Text>
           <View style={styles.previewBadge}>
             <Ionicons name="sparkles" size={14} color="white" style={{marginRight: 5}}/>
-            <Text style={styles.previewGrade}>DYNAMIC ESTIMATE</Text>
+            <Text style={styles.previewGrade}>{previewGrade}</Text>
           </View>
         </View>
 
@@ -258,7 +319,7 @@ export const SellScreen = ({ navigation }) => {
         <View style={[styles.progressFill, { width: step === 1 ? '50%' : '100%' }]} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
         {step === 1 ? renderStep1() : renderStep2()}
       </ScrollView>
     </View>

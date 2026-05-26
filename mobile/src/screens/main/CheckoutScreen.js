@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
@@ -7,20 +7,42 @@ import api from '../../api/client';
 export const CheckoutScreen = ({ route, navigation }) => {
   const { item } = route.params;
   const [offerPrice, setOfferPrice] = useState(item.price.toString());
-  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [paymentMethod, setPaymentMethod] = useState('WALLET');
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get('profiles/me/');
+      setProfile(response.data);
+    } catch (e) {
+      console.error('Fetch Profile Error (Checkout):', e.message);
+    }
+  };
 
   const paymentMethods = [
+    { id: 'WALLET', label: 'MyPreLove Cash Wallet (Cashless)', icon: 'wallet-outline' },
     { id: 'CASH', label: 'Cash on Delivery', icon: 'cash-outline' },
     { id: 'TRANSFER', label: 'Bank Transfer', icon: 'business-outline' },
-    { id: 'TNG', label: 'Touch n Go eWallet', icon: 'wallet-outline' },
-    { id: 'GRABPAY', label: 'GrabPay', icon: 'phone-portrait-outline' },
   ];
 
   const handleConfirmOffer = async () => {
     if (!offerPrice || parseFloat(offerPrice) <= 0) {
       Alert.alert("Error", "Please enter a valid price.");
       return;
+    }
+
+    if (paymentMethod === 'WALLET' && profile) {
+      const balance = parseFloat(profile.wallet_balance || 0);
+      const offer = parseFloat(offerPrice);
+      if (offer > balance) {
+        Alert.alert("Insufficient Balance", "Your wallet balance is insufficient to complete this offer. Please top up your wallet in your profile first!");
+        return;
+      }
     }
 
     try {
@@ -60,7 +82,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
           <View style={styles.itemRow}>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemOriginalPrice}>Listed Price: RM {item.price}</Text>
+              <Text style={styles.itemOriginalPrice}>Listed Price: RM {parseFloat(item.price || 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -80,7 +102,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
             </View>
           ) : (
             <View style={styles.fixedPriceContainer}>
-              <Text style={styles.fixedPrice}>RM {item.price}</Text>
+              <Text style={styles.fixedPrice}>RM {parseFloat(item.price || 0).toFixed(2)}</Text>
               <Text style={styles.fixedLabel}>This item price is fixed.</Text>
             </View>
           )}
@@ -107,6 +129,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
                 paymentMethod === method.id && styles.selectedLabel
               ]}>
                 {method.label}
+                {method.id === 'WALLET' && profile ? `\n(Balance: RM ${parseFloat(profile.wallet_balance || 0).toFixed(2)})` : ''}
               </Text>
               {paymentMethod === method.id && (
                 <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />

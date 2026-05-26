@@ -53,6 +53,7 @@ class Profile(models.Model):
     trust_score = models.FloatField(default=0.0, help_text="Calculated based on ABI model")
     is_verified = models.BooleanField(default=False, db_index=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=500.00)
 
     def save(self, *args, **kwargs):
         if self.profile_picture:
@@ -129,28 +130,39 @@ class Item(models.Model):
         ordering = ['-created_at']
 
     def calculate_grade(self):
-        # Determine condition grade.
-        # Points result in grades A through D.
-        # Max score: 100
+        # Determine condition grade based on Category-specific weighting.
         score = 0
+        cat_name = self.category.name if self.category else 'Others'
         
-        # Primary Functionality (40 points)
-        if self.is_fully_functional: score += 40
-        
-        # Cosmetic & Physical (20 points)
-        if not self.has_scratches: score += 10
-        if not self.has_dents_cracks: score += 10
-        
-        # Provenance (10 points)
-        if self.has_original_box: score += 5
-        if self.has_receipt: score += 5
-        
-        # Maintenance & Usage (30 points)
-        if self.is_clean: score += 10
-        if self.has_all_accessories: score += 5
-        if not self.has_repair_history: score += 5
-        if self.battery_health_good: score += 5
-        if not self.is_modified: score += 5
+        if cat_name == 'Tech':
+            # Tech priorities: Functionality & Provenance
+            if self.is_fully_functional: score += 40
+            if not self.has_repair_history: score += 10
+            if self.battery_health_good: score += 10
+            if not self.has_scratches: score += 5
+            if not self.has_dents_cracks: score += 5
+            if self.has_original_box: score += 10
+            if self.has_receipt: score += 10
+            if self.has_all_accessories: score += 5
+            if self.is_clean: score += 5
+        elif cat_name in ['Men', 'Women', 'Luxury']:
+            # Fashion/Luxury priorities: Cosmetic, Cleanliness & Authenticity (Original Box/Receipt)
+            if self.is_fully_functional: score += 10 # Meaning zippers/buttons work
+            if not self.has_scratches: score += 20 # Meaning rips/stains
+            if self.is_clean: score += 20
+            if not self.is_modified: score += 10
+            if self.has_original_box: score += 15 # Tags/Dust bag
+            if self.has_receipt: score += 15
+            if self.has_all_accessories: score += 10
+        else:
+            # Default weighting (Home & Living, Others, etc.)
+            if self.is_fully_functional: score += 30
+            if not self.has_scratches: score += 15
+            if not self.has_dents_cracks: score += 15
+            if self.is_clean: score += 15
+            if self.has_all_accessories: score += 10
+            if self.has_original_box: score += 10
+            if self.has_receipt: score += 5
 
         if score >= 90: return self.Grade.A
         if score >= 70: return self.Grade.B
@@ -162,9 +174,6 @@ class Item(models.Model):
         # Calculate eco impact based on weight (approx 2.5kg of CO2 saved per 1kg of item)
         if self.weight > 0:
             self.eco_impact = float(self.weight) * 2.5
-        elif self.eco_impact == 0:
-            # Fallback for old items or if weight is missing
-            self.eco_impact = float(self.price) * 0.15
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -189,6 +198,7 @@ class Notification(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     is_read = models.BooleanField(default=False, db_index=True)
+    related_id = models.IntegerField(null=True, blank=True) # ID of item or user for deep linking
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -207,6 +217,7 @@ class Transaction(models.Model):
         TRANSFER = 'TRANSFER', 'Bank Transfer'
         TNG = 'TNG', 'Touch n Go eWallet'
         GRABPAY = 'GRABPAY', 'GrabPay'
+        WALLET = 'WALLET', 'MyPreLove Cash Wallet'
 
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='transactions')
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='purchases')
@@ -219,6 +230,26 @@ class Transaction(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class WalletTransaction(models.Model):
+    class TxType(models.TextChoices):
+        TOP_UP = 'TOP_UP', 'Top Up'
+        PURCHASE = 'PURCHASE', 'Purchase'
+        SALE = 'SALE', 'Sale'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wallet_transactions')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    tx_type = models.CharField(max_length=20, choices=TxType.choices)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.tx_type} - RM {self.amount:.2f}"
+
 
 
 class Message(models.Model):

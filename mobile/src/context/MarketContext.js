@@ -32,6 +32,13 @@ export const MarketProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    refreshMarket();
+    // Real-time Background Polling: Refresh market every 10 seconds
+    const interval = setInterval(refreshMarket, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleFavorite = async (itemId) => {
     try {
       const isFav = favorites.includes(itemId);

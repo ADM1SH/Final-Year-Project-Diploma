@@ -51,7 +51,7 @@ export const AdminItemManagementScreen = ({ navigation }) => {
       <Image source={{ uri: item.display_image }} style={styles.thumbnail} />
       <View style={styles.itemInfo}>
         <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.price}>RM {item.price}</Text>
+        <Text style={styles.price}>RM {parseFloat(item.price || 0).toFixed(2)}</Text>
         <Text style={styles.seller}>By: {item.seller_name}</Text>
       </View>
       <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteItem(item.id, item.name)}>

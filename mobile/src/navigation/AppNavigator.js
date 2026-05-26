@@ -17,6 +17,7 @@ import { ChatDetailScreen } from '../screens/main/ChatDetailScreen';
 import { AdminDashboardScreen } from '../screens/main/AdminDashboardScreen';
 import { AdminUserManagementScreen } from '../screens/main/AdminUserManagementScreen';
 import { AdminItemManagementScreen } from '../screens/main/AdminItemManagementScreen';
+import { AdminReportsScreen } from '../screens/main/AdminReportsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { COLORS } from '../utils/constants';
 
@@ -30,13 +31,15 @@ const MainTabs = () => {
   const { user } = useAuth();
   const [unreadNotifs, setUnreadNotifs] = React.useState(0);
   const [unreadMessages, setUnreadMessages] = React.useState(0);
+  const [pendingActions, setPendingActions] = React.useState(0);
 
   const fetchBadgeCounts = async () => {
     if (!user) return;
     try {
-      const [notifRes, msgRes] = await Promise.all([
+      const [notifRes, msgRes, transRes] = await Promise.all([
         api.get('notifications/'),
-        api.get('messages/')
+        api.get('messages/'),
+        api.get('transactions/')
       ]);
       
       const notifs = notifRes.data.results || notifRes.data;
@@ -47,9 +50,14 @@ const MainTabs = () => {
       // Only count messages where the user is the receiver and they are unread
       const unreadM = msgs.filter(m => !m.is_read && m.receiver_name === user.username).length;
       setUnreadMessages(unreadM);
+
+      const trans = transRes.data.results || transRes.data;
+      // Count pending sales where the user is the seller
+      const pendingT = trans.filter(t => t.status === 'PENDING' && t.seller_name === user.username).length;
+      setPendingActions(pendingT);
       
-      if (unreadN > 0 || unreadM > 0) {
-        console.log(`Badges Updated - Notifs: ${unreadN}, Messages: ${unreadM}`);
+      if (unreadN > 0 || unreadM > 0 || pendingT > 0) {
+        console.log(`Badges Updated - Notifs: ${unreadN}, Messages: ${unreadM}, Pending: ${pendingT}`);
       }
     } catch (e) {
       console.error('Badge Fetch Error:', e.message);
@@ -85,6 +93,7 @@ const MainTabs = () => {
             badgeCount = unreadMessages;
           } else if (route.name === 'For You') {
             iconName = focused ? 'person' : 'person-outline';
+            badgeCount = pendingActions;
           } else if (route.name === 'Sell') {
             return (
               <View style={styles.sellButton}>
@@ -131,6 +140,7 @@ const AppStack = () => (
     <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
     <Stack.Screen name="AdminUserManagement" component={AdminUserManagementScreen} />
     <Stack.Screen name="AdminItemManagement" component={AdminItemManagementScreen} />
+    <Stack.Screen name="AdminReports" component={AdminReportsScreen} />
   </Stack.Navigator>
 );
 

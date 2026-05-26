@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
@@ -10,6 +10,14 @@ export const ChatListScreen = ({ navigation }) => {
   const { user, token } = useAuth();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchChats();
+    setRefreshing(false);
+  };
 
   // We need the current user's ID to correctly identify the partner
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -58,11 +66,22 @@ export const ChatListScreen = ({ navigation }) => {
     }
   };
 
+  const filteredChats = chats.filter(chat => 
+    chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    chat.message.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useFocusEffect(
     useCallback(() => {
       fetchChats();
     }, [user])
   );
+
+  // Real-time Background Polling: Refresh chats every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchChats, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity 
@@ -102,7 +121,12 @@ export const ChatListScreen = ({ navigation }) => {
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
           <Ionicons name="search-outline" size={20} color={COLORS.gray} />
-          <TextInput placeholder="Search your conversations..." style={styles.searchInput} />
+          <TextInput 
+            placeholder="Search your conversations..." 
+            style={styles.searchInput} 
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
       </View>
 
@@ -110,7 +134,10 @@ export const ChatListScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
       ) : (
         <FlatList
-          data={chats}
+          data={filteredChats}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          }
           renderItem={renderItem}
           keyExtractor={item => item.name}
           contentContainerStyle={styles.list}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
@@ -13,6 +13,13 @@ export const UpdatesScreen = ({ navigation }) => {
   const [broadcastModal, setBroadcastModal] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastContent, setBroadcastContent] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUpdates();
+    setRefreshing(false);
+  };
 
   const fetchUpdates = async () => {
     try {
@@ -28,6 +35,15 @@ export const UpdatesScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       fetchUpdates();
+      // Auto-read: Mark all notifications as read when screen is opened
+      const autoRead = async () => {
+        try {
+          await api.post('notifications/mark_all_read/');
+          // Optional: Local state update to show everything as read immediately
+          setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (e) {}
+      };
+      autoRead();
     }, [])
   );
 
@@ -42,6 +58,41 @@ export const UpdatesScreen = ({ navigation }) => {
       await api.post(`notifications/${id}/mark_as_read/`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (err) {}
+  };
+
+  const handleNotificationPress = async (item) => {
+    await markAsRead(item.id);
+    
+    const title = item.title.toLowerCase();
+    const content = item.content.toLowerCase();
+
+    // Direct deep-linking using related_id if available
+    if (item.related_id) {
+      if (title.includes('message')) {
+        // Find the username from the content for ChatDetail
+        const parts = item.content.split('from ');
+        if (parts.length > 1) {
+          const partnerName = parts[1].replace('.', '').trim();
+          navigation.navigate('ChatDetail', { userName: partnerName, userId: item.related_id });
+        } else {
+          navigation.navigate('Chat');
+        }
+      } 
+      else if (title.includes('listing') || title.includes('interest') || title.includes('sale') || title.includes('purchase')) {
+        // Items always go to ItemDetail
+        navigation.navigate('ItemDetail', { itemId: item.related_id });
+      }
+    } 
+    // Fallback logic
+    else {
+      if (title.includes('message')) {
+        navigation.navigate('Chat');
+      } else if (title.includes('listing')) {
+        navigation.navigate('Home');
+      } else if (title.includes('sale') || title.includes('purchase') || title.includes('interest') || content.includes('review')) {
+        navigation.navigate('For You');
+      }
+    }
   };
 
   const handleBroadcast = async () => {
@@ -64,7 +115,7 @@ export const UpdatesScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={[styles.notifCard, !item.is_read && styles.unreadCard]} 
-      onPress={() => markAsRead(item.id)}
+      onPress={() => handleNotificationPress(item)}
     >
       <View style={styles.iconContainer}>
         <Ionicons 
@@ -104,6 +155,9 @@ export const UpdatesScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={notifications}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          }
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.list}

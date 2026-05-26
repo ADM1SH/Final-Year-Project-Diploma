@@ -65,7 +65,7 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
-The API will be live at: `http://127.0.0.1:8000/api/`  
+The API will be live at: `http://127.0.0.1:8000/api/`
 The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
 
 ---

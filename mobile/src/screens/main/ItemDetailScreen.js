@@ -4,14 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import GradeBadge from '../../components/GradeBadge';
 import { useAuth } from '../../context/AuthContext';
+import { useMarket } from '../../context/MarketContext';
 import api from '../../api/client';
 
 export const ItemDetailScreen = ({ route, navigation }) => {
   const { itemId } = route.params;
   const { user: currentUser } = useAuth();
+  const { favorites, toggleFavorite } = useMarket();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [offering, setOffering] = useState(false);
+
+  const isFavorited = favorites.includes(itemId);
 
   const handleMakeOffer = () => {
     navigation.navigate('Checkout', { item });
@@ -53,7 +57,16 @@ export const ItemDetailScreen = ({ route, navigation }) => {
             </TouchableOpacity>
             <View style={styles.rightControls}>
               <TouchableOpacity style={styles.iconButton}><Ionicons name="share-social-outline" size={24} color={COLORS.black}/></TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}><Ionicons name="heart-outline" size={24} color={COLORS.black}/></TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.iconButton} 
+                onPress={() => toggleFavorite(item.id)}
+              >
+                <Ionicons 
+                  name={isFavorited ? "heart" : "heart-outline"} 
+                  size={24} 
+                  color={isFavorited ? COLORS.danger : COLORS.black}
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -64,7 +77,7 @@ export const ItemDetailScreen = ({ route, navigation }) => {
           </View>
           
           <View style={styles.priceRow}>
-            <Text style={styles.price}>RM {item.price}</Text>
+            <Text style={styles.price}>RM {parseFloat(item.price || 0).toFixed(2)}</Text>
             <View style={styles.gradeBadgeContainer}>
               <GradeBadge grade={item.calculated_grade}/>
               <TouchableOpacity style={styles.infoIcon}><Ionicons name="information-circle-outline" size={16} color={COLORS.primary}/></TouchableOpacity>
@@ -105,7 +118,8 @@ export const ItemDetailScreen = ({ route, navigation }) => {
             style={styles.chatButton} 
             onPress={() => navigation.navigate('ChatDetail', { 
               userName: sellerName, 
-              userId: item.seller || item.seller_id 
+              userId: item.seller || item.seller_id,
+              item: item
             })}
           >
             <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.primary}/>

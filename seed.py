@@ -20,6 +20,7 @@ def create_demo_data():
         'Books': 'book-outline',
         'Home & Living': 'home-outline',
         'Luxury': 'diamond-outline',
+        'Others': 'grid-outline',
     }
     for name, icon in cats.items():
         Category.objects.update_or_create(name=name, defaults={'icon_name': icon})

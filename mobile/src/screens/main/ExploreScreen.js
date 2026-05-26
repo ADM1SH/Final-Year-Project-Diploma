@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, TextInput, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, TextInput, TouchableOpacity, StatusBar, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
@@ -18,6 +18,19 @@ export const ExploreScreen = ({ navigation }) => {
   
   const [userResults, setUserResults] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshMarket();
+    if (activeTab === 'Users') {
+      try {
+        const res = await api.get(`profiles/?search=${searchQuery}`);
+        setUserResults(res.data.results || res.data);
+      } catch (err) {}
+    }
+    setRefreshing(false);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -55,9 +68,9 @@ export const ExploreScreen = ({ navigation }) => {
   });
 
   const renderUserItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.userCard}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.user || item.id })}
     >
       <View style={styles.userAvatar}>
         <Text style={styles.userInitial}>{item.username?.[0]?.toUpperCase()}</Text>
@@ -139,6 +152,9 @@ export const ExploreScreen = ({ navigation }) => {
 
           <FlatList
             data={filteredItems}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+            }
             renderItem={({ item }) => (
               <ItemCard 
                 item={item} 
@@ -172,6 +188,9 @@ export const ExploreScreen = ({ navigation }) => {
           ) : (
             <FlatList
               data={userResults}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+              }
               renderItem={renderUserItem}
               keyExtractor={item => item.id.toString()}
               contentContainerStyle={styles.userList}

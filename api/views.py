@@ -94,6 +94,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
+    lookup_field = 'user_id'
     search_fields = ['user__username']
     ordering_fields = ['trust_score']
 
@@ -109,6 +110,62 @@ class ProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], url_path='me/top_up')
+    def top_up(self, request):
+        from decimal import Decimal
+        user = request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        profile, created = Profile.objects.get_or_create(user=user)
+        amount = request.data.get('amount')
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                return Response({'error': 'Amount must be greater than zero.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError):
+            return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        profile.wallet_balance += Decimal(str(amount))
+        profile.save()
+        
+        # Save profiles avoiding signals triggering recursive loops
+        Profile.objects.filter(pk=profile.pk).update(wallet_balance=profile.wallet_balance)
+
+        # Log audit trail record
+        from .models import WalletTransaction
+        WalletTransaction.objects.create(
+            user=user,
+            amount=Decimal(str(amount)),
+            tx_type='TOP_UP',
+            description="Topped up wallet balance"
+        )
+
+        # Notify user
+        Notification.objects.create(
+            user=user,
+            title="Wallet Top Up Successful",
+            content=f"You have topped up RM {amount:.2f} to your MyPreLove Wallet."
+        )
+
+        return Response({
+            'success': True,
+            'wallet_balance': float(profile.wallet_balance)
+        })
+
+    @action(detail=False, methods=['get'], url_path='me/wallet_history')
+    def wallet_history(self, request):
+        user = request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        
+        from .models import WalletTransaction
+        from .serializers import WalletTransactionSerializer
+        
+        txs = WalletTransaction.objects.filter(user=user)
+        serializer = WalletTransactionSerializer(txs, many=True)
+        return Response(serializer.data)
+
+
     @action(detail=False, methods=['get'])
     def marketplace_stats(self, request):
         # Return real platform-wide stats for the Admin Dashboard
@@ -120,7 +177,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=True, methods=['get'])
-    def user_stats(self, request, pk=None):
+    def user_stats(self, request, user_id=None):
         # Return real user-specific stats for the Profile Screen
         profile = self.get_object()
         user = profile.user
@@ -148,7 +205,10 @@ class ProfileViewSet(viewsets.ModelViewSet):
 class ItemViewSet(viewsets.ModelViewSet):
     # Manage marketplace items. 
     # Support search and filtering by price or grade.
-    queryset = Item.objects.select_related('seller', 'category').prefetch_related('images').all()
+    queryset = Item.objects.select_related('seller__profile', 'category').prefetch_related(
+        'images',
+        Prefetch('seller__sales', queryset=Transaction.objects.filter(status='COMPLETED'), to_attr='completed_sales')
+    ).all()
     serializer_class = ItemSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
@@ -159,10 +219,13 @@ class ItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # If no specific 'is_sold' filter is provided, default to only showing unsold items
-        # This keeps the main feed clean while still allowing history lookups
+        # Admin bypass
+        if self.request.user.is_superuser:
+            return queryset
+            
+        # If no specific 'is_sold' filter is provided, default to only showing unsold items on the feed
         is_sold_filter = self.request.query_params.get('is_sold')
-        if is_sold_filter is None:
+        if is_sold_filter is None and self.action == 'list':
             queryset = queryset.filter(is_sold=False)
         return queryset
 
@@ -202,7 +265,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_anonymous:
             user = User.objects.first()
-        return Transaction.objects.filter(Q(buyer=user) | Q(seller=user)).select_related('item', 'buyer', 'seller')
+        return Transaction.objects.filter(Q(buyer=user) | Q(seller=user)).select_related('item', 'buyer', 'seller').prefetch_related('item__images')
 
     def perform_create(self, serializer):
         item = serializer.validated_data['item']
@@ -235,7 +298,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         if user.is_anonymous:
             user = User.objects.first()
         
-        queryset = Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver', 'item')
+        if user.is_superuser:
+            queryset = Message.objects.all().select_related('sender', 'receiver', 'item').prefetch_related('item__images')
+        else:
+            queryset = Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver', 'item').prefetch_related('item__images')
         
         # Support filtering by a specific partner for the ChatDetail screen
         partner_name = self.request.query_params.get('partner')
@@ -279,6 +345,11 @@ class ScamReportViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_anonymous:
             user = User.objects.first()
+        
+        # Superadmin can see ALL reports
+        if user.is_superuser:
+            return ScamReport.objects.all().select_related('reporter', 'reported_user', 'item')
+            
         return ScamReport.objects.filter(reporter=user).select_related('reporter', 'reported_user', 'item')
 
     def perform_create(self, serializer):
@@ -290,9 +361,20 @@ class ScamReportViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     # Manage buyer feedback.
-    queryset = Review.objects.select_related('item', 'reviewer', 'seller').all()
     serializer_class = ReviewSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        queryset = Review.objects.select_related('item', 'reviewer', 'seller').all()
+        seller_id = self.request.query_params.get('seller')
+        if seller_id:
+            queryset = queryset.filter(seller_id=seller_id)
+        
+        reviewer_id = self.request.query_params.get('reviewer')
+        if reviewer_id:
+            queryset = queryset.filter(reviewer_id=reviewer_id)
+            
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -339,6 +421,14 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notification.is_read = True
         notification.save()
         return Response({'status': 'notification marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        user = self.request.user
+        if user.is_anonymous:
+            user = User.objects.first()
+        Notification.objects.filter(user=user, is_read=False).update(is_read=True)
+        return Response({'status': 'all notifications marked as read'})
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

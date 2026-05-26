@@ -75,7 +75,7 @@ const ItemCard = ({ item, onPress, onToggleFavorite, isFavorite }) => {
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.price}>RM {item.price || '0'}</Text>
+            <Text style={styles.price}>RM {parseFloat(item.price || 0).toFixed(2)}</Text>
           </View>
           <View style={styles.metaRow}>
             <EcoMetric value={ecoImpact} label="kg CO2" />
