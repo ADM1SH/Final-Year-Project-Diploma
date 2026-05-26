@@ -47,4 +47,8 @@ yarn-error.log*
 
 # Antigravity CLI
 .antigravitycli/
-
+.antigravitycli
+agycli/
+agycli
+.agycli/
+.agycli
