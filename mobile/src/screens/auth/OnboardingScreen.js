@@ -116,7 +116,7 @@ export const OnboardingScreen = ({ navigation }) => {
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { 
-            useNativeDriver: true,
+            useNativeDriver: false,
             listener: (event) => {
               const slideSize = event.nativeEvent.layoutMeasurement.width;
               const offset = event.nativeEvent.contentOffset.x;

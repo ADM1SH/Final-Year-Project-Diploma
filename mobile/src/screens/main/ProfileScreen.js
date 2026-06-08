@@ -6,7 +6,7 @@
  * Course: Diploma in Information Technology - Final Year Project (FYP)
  * Developer: Adam Anwar
  */
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Alert, FlatList, RefreshControl, Modal, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -43,7 +43,7 @@ export const ProfileScreen = ({ navigation, route }) => {
   const [bundleName, setBundleName] = useState('');
   const [bundlePrice, setBundlePrice] = useState('');
   const [selectedBundleItems, setSelectedBundleItems] = useState([]);
-  const [promptedReviews, setPromptedReviews] = useState([]);
+  const promptedReviews = useRef(new Set());
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -303,10 +303,10 @@ export const ProfileScreen = ({ navigation, route }) => {
         const completedUnprompted = transList.find(t => 
           t.buyer_name?.toLowerCase() === currentUser.username?.toLowerCase() && 
           t.status === 'COMPLETED' && 
-          !promptedReviews.includes(t.id)
+          !promptedReviews.current.has(t.id)
         );
         if (completedUnprompted) {
-          setPromptedReviews(prev => [...prev, completedUnprompted.id]);
+          promptedReviews.current.add(completedUnprompted.id);
           Alert.alert(
             "Transaction Completed!",
             `Would you like to write a review for ${completedUnprompted.seller_name}?`,

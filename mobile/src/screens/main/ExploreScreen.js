@@ -179,15 +179,24 @@ export const ExploreScreen = ({ navigation }) => {
 
   const sortedItems = [...filteredItems].sort((a, b) => {
     if (sortBy === 'price_asc') {
-      return parseFloat(a.price) - parseFloat(b.price);
+      const priceA = parseFloat(a.price) || 0;
+      const priceB = parseFloat(b.price) || 0;
+      return priceA - priceB;
     }
     if (sortBy === 'price_desc') {
-      return parseFloat(b.price) - parseFloat(a.price);
+      const priceA = parseFloat(a.price) || 0;
+      const priceB = parseFloat(b.price) || 0;
+      return priceB - priceA;
     }
     if (sortBy === 'trusted_seller') {
-      return (b.seller_trust_score || 0) - (a.seller_trust_score || 0);
+      const scoreA = parseFloat(a.seller_trust_score) || (a.seller && a.seller.trust_score) || 0;
+      const scoreB = parseFloat(b.seller_trust_score) || (b.seller && b.seller.trust_score) || 0;
+      return scoreB - scoreA;
     }
-    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    // Fallback to 0 if the date string is invalid (e.g. optimistic update)
+    return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
   });
 
   const renderUserItem = ({ item }) => {

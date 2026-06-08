@@ -142,88 +142,92 @@ def update_trust_and_notify(sender, instance, created, **kwargs):
 
             # Double-check it hasn't already been marked sold by a concurrent request
             if not locked_item.is_sold:
+                # We do all the heavy lifting ONLY if the item wasn't already sold
+
+                # Grab the agreed final price that we'll use for wallet maths and notification copy
+                amount = instance.final_price
+
+                # ── Wallet payment path ───────────────────────────────────────────────
+                # Isolate wallet deductions to WALLET payment method only
+                if instance.payment_method == 'WALLET':
+                    # Lock the buyer's profile to prevent a concurrent multi-item purchase from dropping wallet below 0
+                    buyer_profile = Profile.objects.select_for_update().get(pk=instance.buyer.profile.pk)
+                    seller_profile = Profile.objects.select_for_update().get(pk=instance.seller.profile.pk)
+                    
+                    if buyer_profile.wallet_balance < amount:
+                        # Transaction fails due to insufficient funds mid-race condition
+                        from rest_framework.exceptions import ValidationError
+                        # Revert the transaction to PENDING so it doesn't stay COMPLETED
+                        Transaction.objects.filter(pk=instance.pk).update(status='PENDING')
+                        raise ValidationError({"status": "Insufficient wallet balance to complete this transaction. Please top up."})
+
+                    # Subtract the sale amount from the buyer's wallet balance
+                    buyer_profile.wallet_balance -= amount
+                    # Credit the same amount into the seller's wallet balance
+                    seller_profile.wallet_balance += amount
+
+                    # Save profiles avoiding signals triggering recursive loops
+                    Profile.objects.filter(pk=buyer_profile.pk).update(wallet_balance=buyer_profile.wallet_balance)
+                    Profile.objects.filter(pk=seller_profile.pk).update(wallet_balance=seller_profile.wallet_balance)
+
+                    # Log audit trail records
+                    from .models import WalletTransaction
+
+                    # Record a debit entry for the buyer's transaction history
+                    WalletTransaction.objects.create(
+                        user=instance.buyer,
+                        amount=amount,
+                        tx_type='PURCHASE',
+                        description=f"Purchased: {instance.item.name}"
+                    )
+
+                    # Record a credit entry for the seller's transaction history
+                    WalletTransaction.objects.create(
+                        user=instance.seller,
+                        amount=amount,
+                        tx_type='SALE',
+                        description=f"Sold: {instance.item.name}"
+                    )
+
+                    # Tell the seller their money has landed in their wallet
+                    Notification.objects.create(
+                        user=instance.seller,
+                        title="Sale Completed!",
+                        content=f"Your item {instance.item.name} has been sold successfully. RM {amount:.2f} credited to your wallet.",
+                        related_id=instance.item.id  # deep-link so the seller can view the item straight from the notification
+                    )
+
+                    # Confirm the purchase to the buyer and show exactly how much was taken out
+                    Notification.objects.create(
+                        user=instance.buyer,
+                        title="Purchase Successful!",
+                        content=f"You have successfully purchased {instance.item.name}. RM {amount:.2f} deducted from your wallet.",
+                        related_id=instance.item.id
+                    )
+
+                # ── Cash / other payment path ─────────────────────────────────────────
+                else:
+                    # For CASH or other payments, send completion notifications without altering wallet balances
+                    # No money moves in the app — just confirm the deal happened for record-keeping
+                    Notification.objects.create(
+                        user=instance.seller,
+                        title="Sale Completed!",
+                        content=f"Your item {instance.item.name} has been sold successfully via {instance.get_payment_method_display()}.",
+                        related_id=instance.item.id
+                    )
+                    Notification.objects.create(
+                        user=instance.buyer,
+                        title="Purchase Successful!",
+                        content=f"You have successfully purchased {instance.item.name} via {instance.get_payment_method_display()}.",
+                        related_id=instance.item.id
+                    )
+
+                # Finally, commit the item status
                 locked_item.is_sold = True
-                # Use update_fields to avoid triggering unrelated post_save signal side-effects
-                # Only touch is_sold — we don't want to re-fire any Item-level signals for other fields
                 locked_item.save(update_fields=['is_sold'])
 
-        # Bump the seller's ABI trust score now that they have one more completed sale under their belt
-        # Recalculate trust score
-        instance.seller.profile.recalculate_trust_score()
-
-        # Grab the agreed final price that we'll use for wallet maths and notification copy
-        amount = instance.final_price
-
-        # ── Wallet payment path ───────────────────────────────────────────────
-        # Isolate wallet deductions to WALLET payment method only
-        # Only move money around inside the app if the buyer chose in-app wallet
-        if instance.payment_method == 'WALLET':
-            buyer_profile = instance.buyer.profile
-            seller_profile = instance.seller.profile
-
-            # Subtract the sale amount from the buyer's wallet balance
-            buyer_profile.wallet_balance -= amount
-            # Credit the same amount into the seller's wallet balance
-            seller_profile.wallet_balance += amount
-
-            # Save profiles avoiding signals triggering recursive loops
-            # Use queryset .update() instead of .save() to bypass post_save signals and avoid infinite recursion
-            Profile.objects.filter(pk=buyer_profile.pk).update(wallet_balance=buyer_profile.wallet_balance)
-            Profile.objects.filter(pk=seller_profile.pk).update(wallet_balance=seller_profile.wallet_balance)
-
-            # Log audit trail records
-            # Import here to avoid circular import at module level
-            from .models import WalletTransaction
-
-            # Record a debit entry for the buyer's transaction history
-            WalletTransaction.objects.create(
-                user=instance.buyer,
-                amount=amount,
-                tx_type='PURCHASE',
-                description=f"Purchased: {instance.item.name}"
-            )
-
-            # Record a credit entry for the seller's transaction history
-            WalletTransaction.objects.create(
-                user=instance.seller,
-                amount=amount,
-                tx_type='SALE',
-                description=f"Sold: {instance.item.name}"
-            )
-
-            # Tell the seller their money has landed in their wallet
-            Notification.objects.create(
-                user=instance.seller,
-                title="Sale Completed!",
-                content=f"Your item {instance.item.name} has been sold successfully. RM {amount:.2f} credited to your wallet.",
-                related_id=instance.item.id  # deep-link so the seller can view the item straight from the notification
-            )
-
-            # Confirm the purchase to the buyer and show exactly how much was taken out
-            Notification.objects.create(
-                user=instance.buyer,
-                title="Purchase Successful!",
-                content=f"You have successfully purchased {instance.item.name}. RM {amount:.2f} deducted from your wallet.",
-                related_id=instance.item.id
-            )
-
-        # ── Cash / other payment path ─────────────────────────────────────────
-        else:
-            # For CASH or other payments, send completion notifications without altering wallet balances
-            # No money moves in the app — just confirm the deal happened for record-keeping
-            Notification.objects.create(
-                user=instance.seller,
-                title="Sale Completed!",
-                # Use Django's display helper to show a human-readable payment method name (e.g. "Cash")
-                content=f"Your item {instance.item.name} has been sold successfully via {instance.get_payment_method_display()}.",
-                related_id=instance.item.id
-            )
-            Notification.objects.create(
-                user=instance.buyer,
-                title="Purchase Successful!",
-                content=f"You have successfully purchased {instance.item.name} via {instance.get_payment_method_display()}.",
-                related_id=instance.item.id
-            )
+                # Bump the seller's ABI trust score now that they have one more completed sale under their belt
+                instance.seller.profile.recalculate_trust_score()
 
 
 # ── MESSAGE SIGNAL ────────────────────────────────────────────────────────────

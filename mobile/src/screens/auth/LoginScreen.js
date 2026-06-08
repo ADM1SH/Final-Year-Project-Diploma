@@ -70,7 +70,13 @@ export const LoginScreen = ({ navigation }) => {
             </View>
           ) : null}
           
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={() => {
+            if (!username) {
+              Alert.alert("Forgot Password", "Please enter your username first to receive a reset link.");
+            } else {
+              Alert.alert("Password Reset", `A password reset link has been sent to the email associated with ${username}. (Demo Mode)`);
+            }
+          }}>
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
