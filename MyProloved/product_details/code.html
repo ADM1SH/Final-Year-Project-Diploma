@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPreLove - Item Detail</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Brand Anchors -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#f9f9f8",
+                    "primary-fixed": "#b2f1bf",
+                    "on-primary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f9f9f8",
+                    "on-secondary-container": "#6a1b00",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#14512d",
+                    "on-secondary-fixed-variant": "#852400",
+                    "outline-variant": "#c0c9be",
+                    "on-primary-fixed": "#00210d",
+                    "surface-variant": "#e2e2e2",
+                    "surface-container": "#eeeeed",
+                    "tertiary": "#735c00",
+                    "surface": "#f9f9f8",
+                    "secondary": "#a73a15",
+                    "tertiary-fixed": "#ffe088",
+                    "on-surface": "#1a1c1c",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#2f3130",
+                    "on-error-container": "#93000a",
+                    "primary": "#002c13",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#76b284",
+                    "surface-container-low": "#f3f4f3",
+                    "primary-container": "#014421",
+                    "on-tertiary-fixed-variant": "#574500",
+                    "on-surface-variant": "#404941",
+                    "surface-tint": "#306a43",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#cca72f",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#dadad9",
+                    "on-tertiary-fixed": "#241a00",
+                    "tertiary-fixed-dim": "#e9c349",
+                    "secondary-container": "#fe794f",
+                    "secondary-fixed": "#ffdbd0",
+                    "outline": "#717970",
+                    "on-secondary-fixed": "#3a0a00",
+                    "on-tertiary-container": "#4e3d00",
+                    "on-background": "#1a1c1c",
+                    "surface-container-highest": "#e2e2e2",
+                    "inverse-primary": "#97d5a5",
+                    "surface-container-high": "#e8e8e7",
+                    "inverse-on-surface": "#f1f1f0",
+                    "primary-fixed-dim": "#97d5a5",
+                    "secondary-fixed-dim": "#ffb59f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px",
+                    "2xl": "1.5rem"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "base": "4px",
+                    "margin-desktop": "120px",
+                    "margin-mobile": "20px",
+                    "lg": "40px",
+                    "gutter": "16px",
+                    "sm": "16px",
+                    "xl": "64px",
+                    "xs": "8px"
+            },
+            "fontFamily": {
+                    "body-lg": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "headline-lg": [
+                            "Playfair Display"
+                    ],
+                    "body-md": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "label-md": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "headline-lg-mobile": [
+                            "Playfair Display"
+                    ],
+                    "headline-sm": [
+                            "Plus Jakarta Sans"
+                    ],
+                    "headline-md": [
+                            "Playfair Display"
+                    ],
+                    "display-lg": [
+                            "Playfair Display"
+                    ],
+                    "label-sm": [
+                            "Plus Jakarta Sans"
+                    ]
+            },
+            "fontSize": {
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "20px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        /* Custom scrollbar for horizontal lists */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased pb-24 md:pb-0 relative min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="bg-surface/60 backdrop-blur-md dark:bg-surface-dim/60 shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 top-0 sticky z-50">
+<button class="text-primary hover:opacity-80 transition-opacity flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">MyPreLove</h1>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden cursor-pointer hover:opacity-80 transition-opacity shadow-[0px_2px_8px_rgba(0,0,0,0.1)]">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A close up portrait of a young woman smiling warmly, representing a user profile avatar. The lighting is soft and natural, emphasizing a sophisticated, modern aesthetic suitable for a high-end social commerce platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByq7cu4U6KZnOoKupRHi34qvrMuO3vSdnOX31Wcaf9PmenrExlohYaORpJlDzoXdNDeQbo7s3cQQUgt4htys8Qje1EMwybPsV239pInK08V0ptv8sUTiYT9z8bK9Lwz07dG8g_Zw5gHj7Q3RjCtbX7OL9qd62_TK7O12kkKSyyYuZ5C99SS-oeSNujOMCyXRHqRT48XyRS2XvVnbbS4H5_saXCA1VDyDwvl28wjcZWREGoWXoFZbvopz2QSYVZoMWGhiFafedN33oy"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-[1440px] mx-auto w-full px-margin-mobile md:px-margin-desktop py-lg grid grid-cols-1 md:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Product Imagery (Sticky on Desktop) -->
+<div class="md:col-span-7 flex flex-col gap-sm md:sticky md:top-24">
+<!-- Main Carousel Image Bento Tile -->
+<div class="w-full aspect-[4/5] md:aspect-square rounded-2xl md:rounded-[32px] overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] relative group bg-surface-container-low">
+<img alt="Vintage Leather Armchair" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105" data-alt="A high-quality product photograph of a vintage, mid-century modern leather armchair. The leather is a rich, warm cognac brown showing slight, desirable patina, set against a pristine, minimalist warm cream background. Soft, natural studio lighting highlights the texture and organic softness of the design, fitting a sophisticated, conscious luxury commerce style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTx54CA_28iT4ifoMRi3zFbRcswVrn50xnIqkcnPIHcgNrHO05COHDrBGiY1p-UqYKAfXybhKr7UGyJGLPku6jvaKBhMn2bRfxCc3BdFGQO9ML_JMGDQ9SpRA2aQ2tHSsZYlVq5_wHRa_7X0C2mOwTrYFtvY3Plais8omuDFZJQtJwiCzIr-wx9BfD_Ae_8IzkKAAB1ocTtpTWIc-Y8nS1vqF_jOHqtVAKUfCIYQsxySmbTMFnnnrsrfROP22sBz02dxy7KxDknU78"/>
+<!-- Grade Badge Overlay -->
+<div class="absolute top-4 left-4 md:top-6 md:left-6 flex gap-2 z-10">
+<span class="bg-primary-fixed/90 backdrop-blur-md text-on-primary-fixed font-label-md text-label-md px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        Grade A
+                    </span>
+</div>
+<!-- Carousel Indicators (Visual Only) -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-surface/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+<div class="w-2 h-2 rounded-full bg-white shadow-sm"></div>
+<div class="w-2 h-2 rounded-full bg-white/40 cursor-pointer hover:bg-white/60 transition-colors"></div>
+<div class="w-2 h-2 rounded-full bg-white/40 cursor-pointer hover:bg-white/60 transition-colors"></div>
+<div class="w-2 h-2 rounded-full bg-white/40 cursor-pointer hover:bg-white/60 transition-colors"></div>
+</div>
+</div>
+<!-- Thumbnail Strip (Desktop) -->
+<div class="hidden md:flex gap-sm overflow-x-auto hide-scrollbar py-2">
+<div class="w-24 h-24 rounded-xl overflow-hidden shadow-sm border-2 border-primary cursor-pointer shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-quality thumbnail photograph of a vintage leather armchair from the front angle. The lighting is soft and studio-quality, emphasizing a minimalist and sophisticated luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-blUQkwqAKGaEXklgsTOqYlQisywn3V1jWHezNbEpegIb4tpxXxuqhTQmvYOxd81zX3BeKUUhSzdAK0Gt1kiZPa5t7umrhLVHhFrGgDbAov0kslwuES7NQ79sOolNKctQAfZt8-hrMWoUZy09PNPq3YiJVDKxLv-kjnwCoyLY5P0KSL-ag4GHyRwyWju7n4V8G_lkvmDVdc_WqzyEmjNaKsZ2zh08eb6pHc1kAN9LDCyxOT57t8P6hNbaWf3SUkhh_RnU9_rCHJET"/>
+</div>
+<div class="w-24 h-24 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-outline-variant cursor-pointer opacity-70 hover:opacity-100 transition-all shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-quality thumbnail photograph showing the side profile of a vintage leather armchair. The warm wood tones of the frame and the rich leather are highlighted against a clean, warm cream background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZk1USMxV2aUEoSdpzsRki8dfekeHfl2guNvtisvek9VZZNb9_2v3EJmrE1QWggeF5kT0eM3sjlsRMTOk6iFI8UX8F0qqTZ-efqxSjsLRaC78-ZnEn8GON45UndE8cLiqafgbr8JQ_7sDxbv8_g0wQ5jUCqfhwlXaBolaepcpQKqfdMv_QD5sJwk5dMCrVyuWjYJrj-U2f4AH4rG4V1lM7GUUy_NpJN0uSGTv3YdZC4vF4gqktxEr07BNvKteFleNeDzi4wRezs9Sx"/>
+</div>
+<div class="w-24 h-24 rounded-xl overflow-hidden shadow-sm border-2 border-transparent hover:border-outline-variant cursor-pointer opacity-70 hover:opacity-100 transition-all shrink-0">
+<img class="w-full h-full object-cover" data-alt="A close-up detail shot of the leather texture and stitching on a vintage armchair. The image conveys a tactile, organic softness and highlights the high-quality craftsmanship of pre-loved furniture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjnjhVwwWmQJiY-sLmuB2tjl4nppwL_CHEYKCktIAAcEn9GYUeURYCR3CX0mt9UqkPsvj5qQ5XQAxKxjje7ddNJhuXUbFmfkn0rRsQoleGK-3PlPmeMIoFFdgIVN8-W5sui7MbjcbW2sTuy0TrBzkPOt5olQglJX9-PI8KraecDpo0lbyrHUCy62lTrbYxvpxiAk2ax1cj2xmKJMMBlgF9OKyNlJ98Hr4TRNxMYK-13SWuOV_yNCT8C-ytrHWAVdWCObZ-kJvtoqp-"/>
+</div>
+</div>
+</div>
+<!-- Right Column: Product Details & Modules -->
+<div class="md:col-span-5 flex flex-col gap-md">
+<!-- Header Block -->
+<div class="flex flex-col gap-xs pt-2">
+<div class="flex justify-between items-start gap-4">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface leading-tight">Vintage Bauhaus Leather Armchair</h2>
+<button class="text-on-surface-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">A timeless mid-century classic, expertly restored to maintain its original charm. Features an authentic teak wood frame and newly conditioned top-grain aniline leather.</p>
+<div class="mt-4 flex items-baseline gap-3">
+<span class="text-primary font-display-lg text-display-lg tracking-tight">$1,250</span>
+<span class="font-label-md text-label-md text-on-surface-variant line-through opacity-60">Retail: $2,800</span>
+</div>
+</div>
+<!-- Seller Profile Bento Tile -->
+<div class="bg-surface-container-lowest rounded-2xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex items-center justify-between transition-transform hover:-translate-y-1 duration-300 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full bg-surface-variant overflow-hidden shadow-sm">
+<img alt="Seller Avatar" class="w-full h-full object-cover" data-alt="A soft, lifestyle-focused portrait of a male seller in his studio. He is smiling slightly, representing a trusted and human-centric persona suitable for a curated, community commerce platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB673nblU1--_B_o9Xf1Gz-Qhq2fOKeYSky6psIKCfGPVHrPt9R8_o7RiRIQvWha52tmjaLgxNN0fnqPJgLsOvUwQtk-3TQJ1-vA-QcbLeWt5OJyya6JROYrAC1eOAx0D9BpazOn6msV__1n2IzaZCbKJHzGtNudtzWv1R3eoLKkgNiq6Q_Mosdbmp585oF48qiN0M3ChKlYrFUyIHrF76MLjD88uNLjExcLbQe7NGCGuJ8QadCxdQ8aXq-_CTcaPMGc4Hqs25he9eS"/>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface text-base">Curated Classics Studio</span>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm">4.9</span>
+<span class="opacity-70">(124 Reviews)</span>
+</div>
+</div>
+</div>
+<button class="font-label-md text-label-md text-primary px-5 py-2 rounded-full border border-outline-variant hover:bg-primary hover:text-on-primary hover:border-primary transition-all">Follow</button>
+</div>
+<!-- Eco Impact Bento Tile -->
+<div class="bg-surface-container-low rounded-2xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col gap-4 relative overflow-hidden">
+<!-- Decorative background blob -->
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary-fixed/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined bg-primary-fixed/30 p-1.5 rounded-lg" style="font-variation-settings: 'FILL' 1;">park</span>
+<h3 class="font-headline-sm text-headline-sm">Eco Impact</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm pr-8">By choosing this pre-loved item over buying new, you are actively participating in circular commerce.</p>
+<div class="flex gap-3 mt-2">
+<div class="bg-surface-container-lowest p-4 rounded-xl flex-1 flex flex-col items-center justify-center text-center shadow-sm">
+<span class="font-headline-lg text-headline-lg text-secondary-container">120<span class="text-body-md text-on-surface-variant font-normal">kg</span></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">CO2e Saved</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl flex-1 flex flex-col items-center justify-center text-center shadow-sm">
+<span class="font-headline-lg text-headline-lg text-primary">100<span class="text-body-md text-on-surface-variant font-normal">%</span></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Circular</span>
+</div>
+</div>
+</div>
+<!-- Item Details Accordion (Simulated) -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col">
+<div class="p-sm md:p-md flex justify-between items-center cursor-pointer border-b border-outline-variant/20 hover:bg-surface-container-low/50 transition-colors">
+<h3 class="font-label-md text-label-md text-on-surface">Dimensions &amp; Specs</h3>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+<div class="p-sm md:p-md bg-surface-container-lowest">
+<ul class="font-body-md text-body-md text-on-surface-variant space-y-3 text-sm">
+<li class="flex justify-between items-end border-b border-outline-variant/10 pb-2">
+<span class="opacity-80">Dimensions</span>
+<span class="font-label-md text-label-md text-on-surface">80cm W x 95cm H x 85cm D</span>
+</li>
+<li class="flex justify-between items-end border-b border-outline-variant/10 pb-2">
+<span class="opacity-80">Primary Material</span>
+<span class="font-label-md text-label-md text-on-surface">Top-Grain Aniline Leather</span>
+</li>
+<li class="flex justify-between items-end">
+<span class="opacity-80">Frame</span>
+<span class="font-label-md text-label-md text-on-surface">Solid Teak Wood</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Desktop Action Footer (Static within column) -->
+<div class="hidden md:flex gap-sm mt-4">
+<button class="flex-1 py-4 px-6 rounded-full font-label-md text-label-md bg-gradient-to-r from-secondary-container to-tertiary-fixed text-on-secondary-container shadow-sm hover:shadow-md hover:opacity-90 transition-all flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">handshake</span>
+                    Make Offer
+                </button>
+<button class="flex-1 py-4 px-6 rounded-full font-label-md text-label-md bg-primary text-on-primary shadow-[0px_4px_14px_rgba(0,44,19,0.3)] hover:shadow-[0px_6px_20px_rgba(0,44,19,0.4)] hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+                    Buy Now
+                </button>
+</div>
+</div>
+</main>
+<!-- Mobile Fixed Bottom Action Footer -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-xl border-t border-white/20 p-sm flex gap-sm items-center z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] pb-6">
+<button class="flex-1 py-3.5 px-4 rounded-full font-label-md text-label-md bg-gradient-to-r from-secondary-container to-tertiary-fixed text-on-secondary-container shadow-sm active:scale-95 transition-transform flex justify-center items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">handshake</span>
+            Offer
+        </button>
+<button class="flex-[1.5] py-3.5 px-4 rounded-full font-label-md text-label-md bg-primary text-on-primary shadow-md active:scale-95 transition-transform flex justify-center items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+            Buy Now
+        </button>
+</div>
+</body></html>

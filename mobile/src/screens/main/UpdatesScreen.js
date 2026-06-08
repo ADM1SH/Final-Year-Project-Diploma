@@ -1,5 +1,13 @@
+/**
+ * File: UpdatesScreen.js
+ * Description: Notification centre displaying real-time alerts, purchase updates,
+ *              and system messages with deep-link navigation.
+ * Project: MyPreLove - Trust-Based Peer-to-Peer Secondhand Mobile App
+ * Course: Diploma in Information Technology - Final Year Project (FYP)
+ * Developer: Adam Anwar
+ */
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../utils/constants';
@@ -10,9 +18,6 @@ export const UpdatesScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [broadcastModal, setBroadcastModal] = useState(false);
-  const [broadcastTitle, setBroadcastTitle] = useState('');
-  const [broadcastContent, setBroadcastContent] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -95,23 +100,6 @@ export const UpdatesScreen = ({ navigation }) => {
     }
   };
 
-  const handleBroadcast = async () => {
-    if (!broadcastTitle || !broadcastContent) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
-    }
-    try {
-      await api.post('notifications/broadcast/', { title: broadcastTitle, content: broadcastContent });
-      Alert.alert("Success", "Broadcast sent to all users!");
-      setBroadcastModal(false);
-      setBroadcastTitle('');
-      setBroadcastContent('');
-      fetchUpdates();
-    } catch (err) {
-      Alert.alert("Error", "Could not send broadcast.");
-    }
-  };
-
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={[styles.notifCard, !item.is_read && styles.unreadCard]} 
@@ -142,12 +130,6 @@ export const UpdatesScreen = ({ navigation }) => {
           <Text style={styles.headerSubtitle}>System & Activity</Text>
           <Text style={styles.headerTitle}>Updates</Text>
         </View>
-        {user?.username === 'superadmin' && (
-          <TouchableOpacity style={styles.broadcastBtn} onPress={() => setBroadcastModal(true)}>
-            <Ionicons name="megaphone" size={20} color="white" />
-            <Text style={styles.broadcastText}>Broadcast</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {loading ? (
@@ -163,74 +145,137 @@ export const UpdatesScreen = ({ navigation }) => {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="notifications-off-outline" size={60} color={COLORS.lightGray} />
-              <Text style={styles.emptyText}>You're all caught up!</Text>
+              <Ionicons name="notifications-off-outline" size={60} color={COLORS.lightGray} style={{ opacity: 0.6 }} />
+              <Text style={[styles.emptyText, { fontWeight: '600', color: COLORS.black, marginTop: 10 }]}>No New Alerts</Text>
+              <Text style={[styles.emptyText, { fontSize: 13, color: COLORS.gray, marginTop: 4, paddingHorizontal: 20 }]}>You are completely caught up! We'll notify you when you receive new messages, custom offers, or community activity.</Text>
             </View>
           }
         />
       )}
-
-      {/* Broadcast Modal for Superadmin */}
-      <Modal visible={broadcastModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New System Broadcast</Text>
-            <TextInput 
-              style={styles.modalInput} 
-              placeholder="Alert Title" 
-              value={broadcastTitle}
-              onChangeText={setBroadcastTitle}
-            />
-            <TextInput 
-              style={[styles.modalInput, styles.textArea]} 
-              placeholder="Message content..." 
-              multiline
-              value={broadcastContent}
-              onChangeText={setBroadcastContent}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setBroadcastModal(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.sendBtn} onPress={handleBroadcast}>
-                <Text style={styles.sendText}>Send to All</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  headerSubtitle: { fontSize: 12, color: COLORS.gray, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 },
-  headerTitle: { fontSize: 32, fontWeight: 'bold', color: '#111827' },
-  broadcastBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.danger, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, marginBottom: 5 },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  header: { 
+    paddingTop: 60, 
+    paddingHorizontal: 20, 
+    paddingBottom: 20, 
+    backgroundColor: COLORS.background, 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-end' 
+  },
+  headerSubtitle: { 
+    fontSize: 11, 
+    color: COLORS.gray, 
+    fontWeight: 'bold', 
+    textTransform: 'uppercase', 
+    letterSpacing: 1.5,
+    marginBottom: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-SemiBold'
+  },
+  headerTitle: { 
+    fontSize: 32, 
+    fontWeight: 'bold', 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'PlayfairDisplay-Bold'
+  },
+  broadcastBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.danger, 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderRadius: 20, 
+    marginBottom: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
+  },
   broadcastText: { color: 'white', fontWeight: 'bold', marginLeft: 8, fontSize: 12 },
-  list: { padding: 15 },
-  notifCard: { flexDirection: 'row', backgroundColor: 'white', padding: 18, borderRadius: 16, marginBottom: 12, alignItems: 'center', elevation: 2 },
-  unreadCard: { backgroundColor: '#ECFDF5', borderLeftWidth: 4, borderLeftColor: COLORS.primary },
-  iconContainer: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  list: { padding: 15, paddingBottom: 130 },
+
+  notifCard: { 
+    flexDirection: 'row', 
+    backgroundColor: COLORS.white, 
+    padding: 18, 
+    borderRadius: 16, 
+    marginBottom: 12, 
+    alignItems: 'center', 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  unreadCard: { 
+    backgroundColor: COLORS.eco, 
+    borderLeftWidth: 4, 
+    borderLeftColor: COLORS.primary 
+  },
+  iconContainer: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: COLORS.lightGray, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginRight: 15 
+  },
   notifInfo: { flex: 1 },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  notifTitle: { fontSize: 15, color: '#374151' },
+  notifTitle: { fontSize: 15, color: COLORS.black, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif' },
   notifTime: { fontSize: 11, color: COLORS.gray },
   notifMessage: { fontSize: 13, color: COLORS.gray, lineHeight: 18 },
-  boldText: { fontWeight: 'bold', color: '#111827' },
+  boldText: { fontWeight: 'bold', color: COLORS.black },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primary, marginLeft: 10 },
   emptyContainer: { alignItems: 'center', marginTop: 100 },
   emptyText: { color: COLORS.gray, marginTop: 15 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: 'white', borderRadius: 20, padding: 25 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  modalInput: { backgroundColor: '#F3F4F6', borderRadius: 12, padding: 15, marginBottom: 15, fontSize: 16 },
+  modalContent: { 
+    backgroundColor: COLORS.background, 
+    borderRadius: 20, 
+    padding: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 5
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: '600', 
+    marginBottom: 20, 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
+  modalInput: { 
+    backgroundColor: COLORS.white, 
+    borderRadius: 16, 
+    padding: 15, 
+    marginBottom: 15, 
+    fontSize: 16, 
+    color: COLORS.black,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1
+  },
   textArea: { height: 100, textAlignVertical: 'top' },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end' },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' },
   cancelBtn: { padding: 15 },
   cancelText: { color: COLORS.gray, fontWeight: 'bold' },
-  sendBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, marginLeft: 10 },
+  sendBtn: { 
+    backgroundColor: COLORS.primary, 
+    paddingHorizontal: 20, 
+    paddingVertical: 12, 
+    borderRadius: 20, 
+    marginLeft: 10 
+  },
   sendText: { color: 'white', fontWeight: 'bold' }
 });

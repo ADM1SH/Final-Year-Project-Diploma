@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPreLove - Explore</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#f9f9f8", "primary-fixed": "#b2f1bf", "on-primary": "#ffffff", "on-tertiary": "#ffffff", "surface-bright": "#f9f9f8", "on-secondary-container": "#6a1b00", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#14512d", "on-secondary-fixed-variant": "#852400", "outline-variant": "#c0c9be", "on-primary-fixed": "#00210d", "surface-variant": "#e2e2e2", "surface-container": "#eeeeed", "tertiary": "#735c00", "surface": "#f9f9f8", "secondary": "#a73a15", "tertiary-fixed": "#ffe088", "on-surface": "#1a1c1c", "error-container": "#ffdad6", "inverse-surface": "#2f3130", "on-error-container": "#93000a", "primary": "#002c13", "error": "#ba1a1a", "on-primary-container": "#76b284", "surface-container-low": "#f3f4f3", "primary-container": "#014421", "on-tertiary-fixed-variant": "#574500", "on-surface-variant": "#404941", "surface-tint": "#306a43", "surface-container-lowest": "#ffffff", "tertiary-container": "#cca72f", "on-error": "#ffffff", "surface-dim": "#dadad9", "on-tertiary-fixed": "#241a00", "tertiary-fixed-dim": "#e9c349", "secondary-container": "#fe794f", "secondary-fixed": "#ffdbd0", "outline": "#717970", "on-secondary-fixed": "#3a0a00", "on-tertiary-container": "#4e3d00", "on-background": "#1a1c1c", "surface-container-highest": "#e2e2e2", "inverse-primary": "#97d5a5", "surface-container-high": "#e8e8e7", "inverse-on-surface": "#f1f1f0", "primary-fixed-dim": "#97d5a5", "secondary-fixed-dim": "#ffb59f"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px", "2xl": "1.25rem"
+                    },
+                    spacing: {
+                        "md": "24px", "base": "4px", "margin-desktop": "120px", "margin-mobile": "20px", "lg": "40px", "gutter": "16px", "sm": "16px", "xl": "64px", "xs": "8px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Plus Jakarta Sans"], "headline-lg": ["Playfair Display"], "body-md": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Playfair Display"], "headline-sm": ["Plus Jakarta Sans"], "headline-md": ["Playfair Display"], "display-lg": ["Playfair Display"], "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-lg": ["32px", { lineHeight: "1.3", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "label-md": ["14px", { lineHeight: "1.2", letterSpacing: "0.02em", fontWeight: "600" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "1.3", fontWeight: "600" }],
+                        "headline-sm": ["20px", { lineHeight: "1.4", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "1.2", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "1.2", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Subtle glow for the active add button */
+        .glow-effect {
+            box-shadow: 0 0 15px rgba(178, 241, 191, 0.6); /* primary-fixed */
+        }
+        
+        /* Soft gradient background for the page to feel premium */
+        body {
+            background: radial-gradient(circle at top left, #ffffff 0%, #f9f9f8 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col md:flex-row">
+<!-- DESKTOP NAVIGATION (NavigationDrawer) -->
+<aside class="hidden md:flex flex-col gap-base py-md bg-surface-container-low dark:bg-surface-container-high shadow-xl h-screen w-72 rounded-r-xl sticky top-0 flex-shrink-0 z-40 border-r border-surface-variant/30">
+<div class="px-md mb-8 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant shadow-sm">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="A close-up, soft-focus portrait of a stylish person with a minimal, conscious fashion aesthetic. The lighting is warm and natural, casting gentle shadows that emphasize a tactile, high-end lifestyle feel against a soft cream background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUYfkPM_Y608biZEEOdAf7geO0kWGhU8zZ-ySJ-sRSadL5JP3WmmmLc8SXN5lsoX3oFbjYUk1gtduT_GxCKIg9wa_zqnUl2UUPPhd6a9_aPdooo6NQbi7R5Iue7ljISmvbERWJiiXTVUAfK485FNaDrOm_Uv0rpfpiXL45WPBfjQHNzeoSm09KwMKnvQKiL7vAw1Le_OmlZ6bHvwj_033M8ahabQJFq2pA2ExBuZr4C5K45sTmpvy9tFkRuYB-Ay_Joqh4muHHJlr9"/>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Admin Console</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Manage MyPreLove</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<!-- Active State Maps to Dashboard/Home intent -->
+<a class="bg-primary-fixed text-on-primary-fixed rounded-full mx-2 px-4 py-2 font-bold flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 rounded-full mx-2 px-4 py-2 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 rounded-full mx-2 px-4 py-2 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md text-label-md">Moderation</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 rounded-full mx-2 px-4 py-2 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+</aside>
+<!-- MAIN CONTENT AREA -->
+<main class="flex-1 flex flex-col min-w-0 pb-32 md:pb-10 relative">
+<!-- MOBILE TOP APP BAR -->
+<header class="md:hidden bg-surface/60 backdrop-blur-md dark:bg-surface-dim/60 shadow-sm docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-margin-mobile h-16 border-b border-white/20 transition-all">
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity p-2 -ml-2 rounded-full">
+<span class="material-symbols-outlined">search</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed tracking-tight">MyPreLove</h1>
+<div class="w-8 h-8 rounded-full overflow-hidden shadow-sm bg-surface-variant">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A close-up, soft-focus portrait of a stylish person with a minimal, conscious fashion aesthetic. The lighting is warm and natural, casting gentle shadows that emphasize a tactile, high-end lifestyle feel against a soft cream background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALOsfFnNvR5fVnaqu3xQ2F81jWhSxYXM6gdskN2K4OJqcZSiQGM94ZmmDMb1h9ZmpgZhnmqEaVBWdBPr9lxjQwp0ighZ7enxLDCsuvTu7zTMfFw2MvIJAmgXWXGMkBOYVU9spsdXasHs-sLAGUf3aKfl2r46RgubOkhLnFTmrG0crQW-pC37UGdxpteoKQsEUVCskKuzrkXn8CoFN5hOiRbLh7nU1ZeQrWA5-A4kEvmtfsww6vw1VpZ_ZUi4dEwlalT9pqzgl9xJ2s"/>
+</div>
+</header>
+<!-- CONTENT CANVAS -->
+<div class="px-margin-mobile md:px-lg pt-6 md:pt-12 max-w-7xl mx-auto w-full">
+<!-- HEADER SECTION -->
+<div class="mb-8">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Discover Pre-Loved Luxury</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl">Curated sustainable pieces for a conscious lifestyle. Find your next treasure.</p>
+</div>
+<!-- FLOATING SEARCH BAR -->
+<div class="relative w-full max-w-2xl mb-8 group z-10">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full bg-surface-container-lowest/80 backdrop-blur-md border border-surface-variant/50 rounded-full py-4 pl-12 pr-4 text-body-md font-body-md text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.06)]" placeholder="Search designers, categories, or styles..." type="text"/>
+<button class="absolute inset-y-2 right-2 bg-primary text-on-primary rounded-full px-6 font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm">
+                    Search
+                </button>
+</div>
+<!-- CATEGORY CHIPS -->
+<div class="flex overflow-x-auto hide-scrollbar gap-3 mb-10 pb-2 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 scroll-smooth">
+<button class="flex-shrink-0 bg-primary text-on-primary border border-transparent rounded-full px-6 py-2.5 font-label-md text-label-md shadow-sm transition-transform hover:scale-105">
+                    All Categories
+                </button>
+<button class="flex-shrink-0 bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary/50 hover:bg-surface-container-low rounded-full px-6 py-2.5 font-label-md text-label-md transition-all">
+                    Sustainable Fashion
+                </button>
+<button class="flex-shrink-0 bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary/50 hover:bg-surface-container-low rounded-full px-6 py-2.5 font-label-md text-label-md transition-all">
+                    Luxury Home
+                </button>
+<button class="flex-shrink-0 bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary/50 hover:bg-surface-container-low rounded-full px-6 py-2.5 font-label-md text-label-md transition-all">
+                    Wellness
+                </button>
+<button class="flex-shrink-0 bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary/50 hover:bg-surface-container-low rounded-full px-6 py-2.5 font-label-md text-label-md transition-all">
+                    Vintage Tech
+                </button>
+</div>
+<!-- CURATED GRID SECTION (Bento Style) -->
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline-md text-headline-md text-primary">Curated For You</h2>
+<button class="font-label-md text-label-md text-primary hover:text-primary-container transition-colors flex items-center gap-1">
+                    See All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter auto-rows-[auto]">
+<!-- Product Card 1: Grade A / 1:1 Aspect -->
+<div class="group flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] bg-surface-container-low">
+<img alt="Product Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A pristine, minimalist photograph of a high-end, pre-loved leather handbag sitting elegantly on a textured stone plinth. The lighting is soft, studio-quality, casting gentle organic shadows that highlight the smooth texture and flawless condition of the bag. The background is a muted, warm cream color, emphasizing a sustainable, sophisticated boutique aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcsuUIcaHWCgHpEaV0Lp8_QXjtlOf8GRiZxvzC3b17Crc16sJca68VulrP6DLkpEoGLU-HuWpa3lLEJefjwj_iV8QsytMCaHGBMLnNDBTs-gLZVoLbxH21gSle5NnSVOBG7YwGEfW4I8wyv6C8wCVKiHksPbTU2ZvEcJHyGgrDBE9J8P338NpzxkSmcf76V5hBQKMyGddt_ur_tMFd_AMAEmj1lCmK5rBwt8ZFt1YQaYKxvIdM4xZfOvPvKhPtqs3_oNXmmmrCni9r"/>
+<!-- Badge -->
+<div class="absolute top-3 left-3 bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm backdrop-blur-sm bg-opacity-90 border border-white/20">
+                            Grade A
+                        </div>
+<button class="absolute bottom-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-on-surface shadow-sm hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<div class="flex flex-col gap-1 px-1">
+<h3 class="font-headline-sm text-[16px] leading-tight text-on-surface truncate">Celine Classic Box Bag</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-body-md font-bold text-primary">RM 12,500</span>
+</div>
+</div>
+</div>
+<!-- Product Card 2: Grade B / Taller Aspect (Bento variation) -->
+<div class="group flex flex-col gap-3 cursor-pointer row-span-2 hidden md:flex">
+<div class="relative w-full h-full min-h-[300px] rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] bg-surface-container-low">
+<img alt="Product Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A tall, elegant product shot of a vintage ceramic vase holding dried organic botanicals. The vase rests on a raw wood surface against a soft, textured beige wall. Natural daylight filters from the side, creating a warm, moody, and tactile minimalist atmosphere that speaks to conscious home decor and longevity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMoL6beyVY6qFmp660B4avAXhYup49P_Pkxl8f0cx6YQJbMuVKpbj-OmqAlzvUMstHtmBh9p24IeD7QIbIBYXDBMdd7GKKgZw25LhkUlYze824_5t8dQBhQCwPwTzvMe1jJIA0KX9bdrLwtSaF7y9pxnNryJqpOyJbK7nVQR2Km5Mmm3VPlt9LWJT6JcktUOpOrKPPmXkuyZ9aYAIVs4UO2w40uUnJG-LKlLivPiPlqgQlQ2ngawWGN69KPPyxqThMnaqngxF0Mv-T"/>
+<!-- Badge -->
+<div class="absolute top-3 left-3 bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm backdrop-blur-sm bg-opacity-90 border border-white/20">
+                            Grade B
+                        </div>
+</div>
+<div class="flex flex-col gap-1 px-1">
+<h3 class="font-headline-sm text-[16px] leading-tight text-on-surface truncate">Mid-Century Ceramic Vase</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-body-md font-bold text-primary">RM 450</span>
+</div>
+</div>
+</div>
+<!-- Product Card 3: Grade A -->
+<div class="group flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] bg-surface-container-low">
+<img alt="Product Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A clean, flat-lay style photograph of premium over-ear headphones in brushed metal and soft leather. They are arranged neatly on a smooth, warm grey surface. The lighting is bright and evenly diffused, giving the tech accessory a high-end, modern, and gently used but immaculate appearance, aligning with a curated lifestyle feed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPTUWCx09IHKQO8LQtLWZt8_20HqH8kS2IAQmrDyaeymBdY9WylD-7CBFyt6lCYiDbq91bD0wq3jElJy8evLiFnei9Kjz8Rv5JLjZChntyESW-a8Xinf4fZSwFzXApMdQRE9EUGLxH3NRATUtsuQOnX_cPOLS2ve5XBZkR6Xlu2b3-2gcawPs6rvSuihCq9pl3PTZLdvSNUEw1i3lD0ctXBdb6ZEwQO9PzXXOptR5EWltbHzmM3gzh7knI762bKF-tXWNY88sHv8m8"/>
+<!-- Badge -->
+<div class="absolute top-3 left-3 bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm backdrop-blur-sm bg-opacity-90 border border-white/20">
+                            Grade A
+                        </div>
+</div>
+<div class="flex flex-col gap-1 px-1">
+<h3 class="font-headline-sm text-[16px] leading-tight text-on-surface truncate">Sony WH-1000XM4</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-body-md font-bold text-primary">RM 899</span>
+</div>
+</div>
+</div>
+<!-- Product Card 4: Like New -->
+<div class="group flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] bg-surface-container-low">
+<img alt="Product Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A highly textured, close-up lifestyle shot of a thick, woven wool sweater folded neatly. The fabric shows high-quality fibers in natural earthy tones. Soft, warm window light creates deep but gentle shadows, emphasizing the organic softness and sustainable luxury of the garment against a pristine white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj09VQcTy1Pr2gli8-Fl3D_Z7E126TYU-reFLqBuAkbFfo52PDszI93BzLy-u--dmNGw3GvDUWAbdscSq_mpJL9DlNZFNjKX1CqtULQepPeaIPfm-6NrmLyPmxTkmSHCGnGsToPK9qpc_Z445FQJYibJQjNZYVle26l0saOROIQ3lvrPxhy5gmghkyl6u-lpIk93RNJyrAWe_09kdO_CeydoXR99wfOASO2yIX-UU85XQjEb9gRa8q5-KGYB0ZYHB3zu6Txe6s5qC5"/>
+<!-- Badge -->
+<div class="absolute top-3 left-3 bg-primary text-white font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm backdrop-blur-sm bg-opacity-90 border border-white/20">
+                            Like New
+                        </div>
+</div>
+<div class="flex flex-col gap-1 px-1">
+<h3 class="font-headline-sm text-[16px] leading-tight text-on-surface truncate">Chunky Knit Wool Sweater</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-body-md font-bold text-primary">RM 320</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- MOBILE BOTTOM NAVIGATION (BottomNavBar) -->
+<nav class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md rounded-full px-6 py-3 bg-white/80 backdrop-blur-xl dark:bg-black/80 border border-white/20 shadow-[0px_8px_32px_rgba(0,0,0,0.12)] z-50 flex justify-between items-center transition-all duration-200">
+<!-- Active Item (Home) -->
+<button class="flex flex-col items-center justify-center w-12 h-12 text-primary dark:text-primary-fixed scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<!-- Inactive Item -->
+<button class="flex flex-col items-center justify-center w-12 h-12 text-on-surface-variant/60 dark:text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<!-- Central Action Button (Glowing) -->
+<button class="relative flex items-center justify-center w-14 h-14 -mt-6 bg-primary text-on-primary rounded-full shadow-lg hover:scale-105 transition-transform duration-200 glow-effect border-2 border-white dark:border-surface-dim">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+</button>
+<!-- Inactive Item -->
+<button class="flex flex-col items-center justify-center w-12 h-12 text-on-surface-variant/60 dark:text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<!-- Inactive Item -->
+<button class="flex flex-col items-center justify-center w-12 h-12 text-on-surface-variant/60 dark:text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">person</span>
+</button>
+</nav>
+<script>
+        // Simple script to handle category chip active states purely for visual demo
+        document.querySelectorAll('.overflow-x-auto button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active classes from all
+                document.querySelectorAll('.overflow-x-auto button').forEach(btn => {
+                    btn.classList.remove('bg-primary', 'text-on-primary', 'border-transparent');
+                    btn.classList.add('bg-surface-container-lowest', 'text-on-surface', 'border-outline-variant');
+                });
+                // Add active classes to clicked
+                this.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'border-outline-variant');
+                this.classList.add('bg-primary', 'text-on-primary', 'border-transparent');
+            });
+        });
+    </script>
+</body></html>

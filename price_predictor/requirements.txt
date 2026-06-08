@@ -1,0 +1,7 @@
+pandas
+scikit-learn
+joblib
+xgboost
+beautifulsoup4
+requests
+streamlit

@@ -104,25 +104,55 @@ export const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   content: { flex: 1, padding: 30, alignItems: 'center', justifyContent: 'center', paddingTop: 80, paddingBottom: 40 },
   logoContainer: { alignItems: 'center', marginBottom: 40 },
-  logoCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center', marginBottom: 20, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  logo: { fontSize: 32, fontWeight: 'bold', color: '#064E3B', letterSpacing: -0.5 },
+  logoCircle: { 
+    width: 64, 
+    height: 64, 
+    borderRadius: 32, 
+    backgroundColor: COLORS.white, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginBottom: 20, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 8 
+  },
+  logo: { 
+    fontSize: 32, 
+    fontWeight: 'bold', 
+    color: COLORS.primary, 
+    letterSpacing: -0.5,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
   tagline: { fontSize: 18, color: COLORS.black, marginTop: 4, opacity: 0.8 },
   inputContainer: { width: '100%', marginBottom: 30 },
   label: { fontSize: 14, fontWeight: 'bold', color: COLORS.black, marginBottom: 8, marginTop: 15 },
-  input: { backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, padding: 16, fontSize: 16 },
-  inputError: { borderColor: COLORS.danger, backgroundColor: '#FEF2F2' },
+  input: { 
+    backgroundColor: COLORS.white, 
+    borderRadius: 16, 
+    padding: 16, 
+    fontSize: 16,
+    color: COLORS.black,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1
+  },
+  inputError: { backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: COLORS.danger },
   errorRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   errorText: { color: COLORS.danger, fontSize: 13, marginLeft: 6, fontWeight: '500' },
   forgotText: { color: COLORS.primary, fontSize: 14, fontWeight: '600', textAlign: 'right', marginTop: 12 },
   actionContainer: { width: '100%', alignItems: 'center' },
-  loginButton: { backgroundColor: '#064E3B', width: '100%', height: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  loginButton: { backgroundColor: COLORS.primary, width: '100%', height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   disabledButton: { opacity: 0.7 },
   loginButtonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
   registerLink: { padding: 10 },
   registerLinkText: { color: COLORS.black, fontSize: 15 },
-  registerBold: { color: '#064E3B', fontWeight: 'bold' },
+  registerBold: { color: COLORS.primary, fontWeight: 'bold' },
   footerText: { fontSize: 12, color: COLORS.gray, position: 'absolute', bottom: 40 }
 });

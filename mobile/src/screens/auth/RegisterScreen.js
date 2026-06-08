@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../utils/constants';
@@ -101,16 +101,60 @@ export const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-  backButton: { position: 'absolute', top: 60, left: 20, zIndex: 10, padding: 10 },
-  content: { padding: 30, paddingTop: 100, alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.black, marginBottom: 8 },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  backButton: { 
+    position: 'absolute', 
+    top: 60, 
+    left: 20, 
+    zIndex: 10, 
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
+  },
+  content: { padding: 30, paddingTop: 120, alignItems: 'center' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: COLORS.primary, 
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
   subtitle: { fontSize: 16, color: COLORS.gray, marginBottom: 40, textAlign: 'center' },
-  input: { backgroundColor: COLORS.lightGray, width: '100%', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 16 },
-  button: { backgroundColor: COLORS.primary, width: '100%', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 20, marginBottom: 20 },
+  input: { 
+    backgroundColor: COLORS.white, 
+    width: '100%', 
+    borderRadius: 16, 
+    padding: 16, 
+    fontSize: 16, 
+    marginBottom: 16,
+    color: COLORS.black,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1
+  },
+  button: { 
+    backgroundColor: COLORS.primary, 
+    width: '100%', 
+    height: 56, 
+    borderRadius: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginTop: 20, 
+    marginBottom: 20 
+  },
   buttonText: { color: COLORS.white, fontSize: 18, fontWeight: 'bold' },
   linkText: { color: COLORS.gray, fontSize: 14 },
   linkBold: { color: COLORS.primary, fontWeight: 'bold' },
   bypassButton: { marginTop: 40, padding: 10 },
-  bypassText: { color: COLORS.gray, fontSize: 12, textDecorationLine: 'underline', fontWeight: '500' }
+  bypassText: { color: COLORS.gray, fontSize: 12, textDecorationLine: 'underline', fontWeight: '600' }
 });

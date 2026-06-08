@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const enterDemoMode = () => {
-    const demoUser = { id: 1, username: 'Adam Anwar', email: 'adam@example.com' };
+    const demoUser = { id: 1, username: 'Demo User', email: 'demo@example.com' };
     const demoToken = 'demo-token';
     setToken(demoToken);
     setUser(demoUser);

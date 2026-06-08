@@ -10,7 +10,8 @@ from .views import (
     CategoryViewSet, ProfileViewSet, ItemViewSet,
     TransactionViewSet, MessageViewSet, ScamReportViewSet,
     NotificationViewSet, ReviewViewSet, FavoriteViewSet,
-    UserViewSet, RegisterView, LoginView, ChangePasswordView
+    UserViewSet, RegisterView, LoginView, ChangePasswordView, SuggestPriceView,
+    BundleViewSet, PriceAlertViewSet, BlockViewSet
 )
 
 # Configure the router for automated URL generation.
@@ -27,8 +28,14 @@ router.register(r'scam-reports', ScamReportViewSet, basename='scam-report')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'reviews', ReviewViewSet, basename='review')
 router.register(r'favorites', FavoriteViewSet, basename='favorite')
+router.register(r'bundles', BundleViewSet, basename='bundle')
+router.register(r'price-alerts', PriceAlertViewSet, basename='price-alert')
+router.register(r'blocks', BlockViewSet, basename='block')
 
 urlpatterns = [
+    # Custom endpoints (must be defined before router to prevent URL clashing)
+    path('items/suggest_price/', SuggestPriceView.as_view(), name='suggest-price'),
+
     # Router generated paths.
     path('', include(router.urls)),
     

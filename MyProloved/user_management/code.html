@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyPreLove - Admin User Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Playfair+Display:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#f9f9f8",
+                      "primary-fixed": "#b2f1bf",
+                      "on-primary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f9f9f8",
+                      "on-secondary-container": "#6a1b00",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#14512d",
+                      "on-secondary-fixed-variant": "#852400",
+                      "outline-variant": "#c0c9be",
+                      "on-primary-fixed": "#00210d",
+                      "surface-variant": "#e2e2e2",
+                      "surface-container": "#eeeeed",
+                      "tertiary": "#735c00",
+                      "surface": "#f9f9f8",
+                      "secondary": "#a73a15",
+                      "tertiary-fixed": "#ffe088",
+                      "on-surface": "#1a1c1c",
+                      "error-container": "#ffdad6",
+                      "inverse-surface": "#2f3130",
+                      "on-error-container": "#93000a",
+                      "primary": "#002c13",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#76b284",
+                      "surface-container-low": "#f3f4f3",
+                      "primary-container": "#014421",
+                      "on-tertiary-fixed-variant": "#574500",
+                      "on-surface-variant": "#404941",
+                      "surface-tint": "#306a43",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-container": "#cca72f",
+                      "on-error": "#ffffff",
+                      "surface-dim": "#dadad9",
+                      "on-tertiary-fixed": "#241a00",
+                      "tertiary-fixed-dim": "#e9c349",
+                      "secondary-container": "#fe794f",
+                      "secondary-fixed": "#ffdbd0",
+                      "outline": "#717970",
+                      "on-secondary-fixed": "#3a0a00",
+                      "on-tertiary-container": "#4e3d00",
+                      "on-background": "#1a1c1c",
+                      "surface-container-highest": "#e2e2e2",
+                      "inverse-primary": "#97d5a5",
+                      "surface-container-high": "#e8e8e7",
+                      "inverse-on-surface": "#f1f1f0",
+                      "primary-fixed-dim": "#97d5a5",
+                      "secondary-fixed-dim": "#ffb59f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "24px",
+                      "base": "4px",
+                      "margin-desktop": "120px",
+                      "margin-mobile": "20px",
+                      "lg": "40px",
+                      "gutter": "16px",
+                      "sm": "16px",
+                      "xl": "64px",
+                      "xs": "8px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Playfair Display"
+                      ],
+                      "body-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Playfair Display"
+                      ],
+                      "headline-sm": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-md": [
+                              "Playfair Display"
+                      ],
+                      "display-lg": [
+                              "Playfair Display"
+                      ],
+                      "label-sm": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for bento areas */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+            border-radius: 10px;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden flex h-screen">
+<!-- Desktop Navigation Drawer -->
+<aside class="hidden md:flex flex-col bg-surface-container-low shadow-xl h-full w-72 rounded-r-xl py-md gap-base z-40 transition-transform flex-shrink-0">
+<div class="px-md mb-lg flex items-center gap-xs">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed overflow-hidden">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a person with short hair, wearing a casual but neat outfit. The lighting is soft and natural, emphasizing a trustworthy and approachable demeanor. Set against a clean, blurred light background fitting a modern admin dashboard avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOEHrgYH4NIb9HNQbm6e2CGvkU42vHClA-_MGGfXK8Lw4Nctr_dvF1zi1CuddiE39i2Z67zhaqjWfam5FjRiYPL88RBQSSDf6Frq4IcGr75zE2n2ZTuQCb9aHW3cBzw4Qt-xsDYLdd8vwzbulCWUDwSVFr209vcrWp_OM_P6mZqiOMu-4ga0TdZcq16RJ7fBA1RJgKL0D-BFYKi33shtlk9MiszhQA7a75qYrxN0gNXYrbetAROLIDRhPnGKVB8C_L9oS3qNqnPImA"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-primary">Admin Console</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Manage MyPreLove</span>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto px-xs flex flex-col gap-2">
+<a class="flex items-center gap-sm px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Active Tab: Users -->
+<a class="flex items-center gap-sm px-4 py-3 rounded-full bg-primary-fixed text-on-primary-fixed font-bold shadow-sm transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group" data-weight="fill" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-sm px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span class="font-label-md text-label-md">Moderation</span>
+</a>
+<a class="flex items-center gap-sm px-4 py-3 rounded-full text-on-surface-variant hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Mobile TopAppBar (Hidden on md) -->
+<header class="md:hidden bg-surface/60 backdrop-blur-md border-b border-white/20 shadow-sm flex justify-between items-center w-full px-margin-mobile h-16 docked full-width top-0 sticky z-50">
+<button class="text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">MyPreLove</h1>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant shadow-sm">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a person with short hair, wearing a casual but neat outfit. The lighting is soft and natural, emphasizing a trustworthy and approachable demeanor. Set against a clean, blurred light background fitting a modern admin dashboard avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs3cmLOcNM7h_Xy2yiF2L-jtA33UD7Na09_2M6zlWoggl2leAkug9k2EXM_0b6N3UrLyTlnIX2PedvJoFvSfH3uwUiYPTLm-JMV7C5X8jErm-kWyg0LtODrZC2Xqp3oBpM1GMYhbEzHPrUz0ENU6EkuhH3iYnKEqobWgVxE1M4wN34JE7GMH57zqVIlrP-O1Izf3yaDLOqK-AJEz_odGM5Lz3ltRtjY_LZvcmElOvNxCmVnwi6FmMwJonuK-R15P4Na70vKEU2lHUT"/>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto px-margin-mobile py-lg md:px-lg md:py-xl scroll-smooth">
+<div class="max-w-5xl mx-auto flex flex-col gap-lg">
+<!-- Page Header & Search -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-sm">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-xs">User Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">View, edit, and manage user accounts and permissions.</p>
+</div>
+<!-- Search Bar -->
+<div class="relative w-full md:w-80 group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors z-10" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-3 rounded-full bg-surface-container-lowest border-none shadow-[0px_4px_20px_rgba(0,0,0,0.05)] focus:ring-2 focus:ring-primary-fixed focus:outline-none font-body-md text-body-md text-on-surface placeholder:text-outline transition-shadow" placeholder="Search usernames or emails..." type="text"/>
+</div>
+</div>
+<!-- Users List (Bento-inspired stacked cards) -->
+<div class="flex flex-col gap-sm">
+<!-- User Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col md:flex-row md:items-center justify-between gap-sm group hover:-translate-y-1 transition-transform duration-300">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex-shrink-0">
+<img alt="Elena Rostova" class="w-full h-full object-cover" data-alt="A portrait of a young woman with warm, glowing skin and loose wavy hair smiling gently. She is positioned against a bright, airy background, evoking a sense of affluent, conscious lifestyle synonymous with high-end sustainable commerce." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdVBR4aeRDHwDLA7GBelgy0S3SIiaBUbH_7IqBDgqL-53tZQimfVDSuXkfCoHKfMAycwleX7XHaXYj0JrK3gvVZ6hG26gOlZOQw7vtGaqH2QN3WOOiioUWDL2o58B6c1FsG29TtpPSgbwT_r7XdLlSj6q8zW81DHJlvM6PGebO-5W4F1fmV56O5dsKSnktbPafJGrACpdqHZ0LiJilYA8P5WnKf_WS8Tp68jp5-x9HfqjPkgxLnOoefAXNWD0V4DTtRcBDK79YK6TE"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Elena Rostova</span>
+<span class="font-body-md text-body-md text-on-surface-variant">elena.r@eco-luxe.com</span>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-md w-full md:w-auto mt-xs md:mt-0 pt-sm md:pt-0 border-t border-surface-variant/50 md:border-none">
+<div class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                Active
+                            </div>
+<div class="flex items-center gap-xs">
+<button aria-label="Edit user" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-fixed">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button aria-label="Suspend user" class="p-2 rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors focus:outline-none focus:ring-2 focus:ring-error-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="block">block</span>
+</button>
+</div>
+</div>
+</div>
+<!-- User Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col md:flex-row md:items-center justify-between gap-sm group hover:-translate-y-1 transition-transform duration-300">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-tertiary-fixed flex-shrink-0 flex items-center justify-center text-on-tertiary-fixed font-headline-md">
+                                M
+                            </div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Marcus Vance</span>
+<span class="font-body-md text-body-md text-on-surface-variant">m.vance@studio.net</span>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-md w-full md:w-auto mt-xs md:mt-0 pt-sm md:pt-0 border-t border-surface-variant/50 md:border-none">
+<div class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                                Inactive
+                            </div>
+<div class="flex items-center gap-xs">
+<button aria-label="Edit user" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-fixed">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button aria-label="Delete user" class="p-2 rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors focus:outline-none focus:ring-2 focus:ring-error-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- User Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col md:flex-row md:items-center justify-between gap-sm group hover:-translate-y-1 transition-transform duration-300">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex-shrink-0">
+<img alt="Julian Ford" class="w-full h-full object-cover" data-alt="A portrait of a man in his thirties with a well-groomed beard, wearing a minimalist dark shirt. The lighting is warm and cinematic, suggesting an evening setting. The aesthetic is clean, sharp, and sophisticated, aligning with modern social commerce visual standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5o5LNJrgzpskV3qYMsbexBB_BtAmc42L_NID8cGbq1Dh48Z9oa4btaJop4cpDYHslIHTtefyCrYH20_1xXE6peUuSsIGsLh2riPwMPEsxIywi5MDh7qWXGyLaFXs6UFdLH3VQHiOwb1xOZZW8vYQ7zMyW15FKtvysqzUTkR2otEKCIWcxP-CgCODFOjO1WWlgYdpoizU0qdiR-J1s_XiFh_DlB431mc03ZHDxCcW15K388wvBj8JNXVJUnXBHQU3wMVCyIJWz3xAN"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Julian Ford</span>
+<span class="font-body-md text-body-md text-on-surface-variant">jford.design@mail.co</span>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-md w-full md:w-auto mt-xs md:mt-0 pt-sm md:pt-0 border-t border-surface-variant/50 md:border-none">
+<div class="px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                Suspended
+                            </div>
+<div class="flex items-center gap-xs">
+<button aria-label="Edit user" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-fixed">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button aria-label="Restore user" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings_backup_restore">settings_backup_restore</span>
+</button>
+</div>
+</div>
+</div>
+<!-- User Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm md:p-md shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex flex-col md:flex-row md:items-center justify-between gap-sm group hover:-translate-y-1 transition-transform duration-300">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-secondary-fixed flex-shrink-0 flex items-center justify-center text-on-secondary-fixed font-headline-md">
+                                S
+                            </div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Sarah Jenkins</span>
+<span class="font-body-md text-body-md text-on-surface-variant">sarah.j@creative.io</span>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-md w-full md:w-auto mt-xs md:mt-0 pt-sm md:pt-0 border-t border-surface-variant/50 md:border-none">
+<div class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                Active
+                            </div>
+<div class="flex items-center gap-xs">
+<button aria-label="Edit user" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-fixed">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button aria-label="Suspend user" class="p-2 rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors focus:outline-none focus:ring-2 focus:ring-error-container">
+<span class="material-symbols-outlined text-[20px]" data-icon="block">block</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button (+ New User) -->
+<button class="fixed bottom-8 right-8 md:bottom-12 md:right-12 bg-primary text-on-primary shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 rounded-full pl-4 pr-6 py-4 flex items-center gap-2 z-50 group">
+<span class="material-symbols-outlined transition-transform group-hover:rotate-90 duration-300" data-icon="add">add</span>
+<span class="font-label-md text-label-md">New User</span>
+</button>
+<!-- Overlay gradient to ensure FAB is always visible over content -->
+<div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none z-40"></div>
+</main>
+</body></html>

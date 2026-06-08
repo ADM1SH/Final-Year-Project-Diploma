@@ -1,3 +1,14 @@
+# =====================================================================
+# SYSTEM/PROJECT NAME: MyPreLove (Secondhand Eco-Marketplace Mobile App)
+# COURSE: Diploma in Information Technology (DIT)
+# MODULE: Final Year Project (FYP) - DIT3004 / DIT3102
+# MEMBERS: Adam Anwar & FYP Group
+# FILE NAME: tests_logic.py
+# PURPOSE: Unit testing suite for validating backend business logic,
+#          automated grading scoring, trust score recalculated points,
+#          and custom message-offer creation workflows.
+# =====================================================================
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 from .models import Item, Category, Profile, Transaction, Review
@@ -254,4 +265,144 @@ class LogicTests(TestCase):
         self.assertEqual(seller_logs[0].tx_type, 'SALE')
         self.assertEqual(seller_logs[0].amount, 50.00)
         self.assertEqual(seller_logs[0].description, f"Sold: {item.name}")
+
+    def test_suggest_price_endpoint(self):
+        """Test the AI suggest price API endpoint."""
+        from django.urls import reverse
+        url = reverse('suggest-price')
+
+        # Test Case 1: Valid params
+        payload = {
+            'category': 'Tech',
+            'brand': 'Apple',
+            'condition_score': 9.0,
+            'duration_days': 3,
+            'original_price': 4000.0
+        }
+        response = self.client.post(url, payload, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('suggested_price', response.data)
+        self.assertGreater(response.data['suggested_price'], 0)
+
+        # Test Case 2: Invalid params
+        bad_payload = {
+            'category': 'Tech',
+            'brand': 'Apple',
+            'condition_score': 'invalid_score',
+            'duration_days': 3,
+            'original_price': 4000.0
+        }
+        response = self.client.post(url, bad_payload, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('error', response.data)
+
+    def test_chat_offer_actions(self):
+        """Test accept_offer and decline_offer custom viewset actions."""
+        from django.urls import reverse
+        from .models import Message
+
+        buyer = User.objects.create_user(username='offer_buyer', password='password')
+        seller = User.objects.create_user(username='offer_seller', password='password')
+        item = Item.objects.create(seller=seller, category=self.category, name='Offer Item', price=100.00)
+
+        # Create a pending offer message
+        message = Message.objects.create(
+            sender=buyer,
+            receiver=seller,
+            item=item,
+            content="Check out this item!",
+            is_offer=True,
+            offer_price=90.00,
+            offer_status='PENDING'
+        )
+
+        # Client authenticates as the seller (receiver) to accept
+        from rest_framework.authtoken.models import Token
+        token = Token.objects.create(user=seller)
+
+        # Post accept action
+        url = reverse('message-accept-offer', args=[message.id])
+        response = self.client.post(url, **{'HTTP_AUTHORIZATION': f"Token {token.key}"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['offer_status'], 'ACCEPTED')
+
+        # Check DB status
+        message.refresh_from_db()
+        self.assertEqual(message.offer_status, 'ACCEPTED')
+
+        # Reset and test decline
+        message.offer_status = 'PENDING'
+        message.save()
+
+        # Post decline action
+        url = reverse('message-decline-offer', args=[message.id])
+        response = self.client.post(url, **{'HTTP_AUTHORIZATION': f"Token {token.key}"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['offer_status'], 'DECLINED')
+
+        message.refresh_from_db()
+        self.assertEqual(message.offer_status, 'DECLINED')
+
+    def test_scam_report_creation(self):
+        """Test that users can submit fraud reports through the API Viewset."""
+        from django.urls import reverse
+        from rest_framework.authtoken.models import Token
+        from .models import ScamReport
+
+        reporter = User.objects.create_user(username='reporter_user', password='password')
+        suspect = User.objects.create_user(username='suspect_user', password='password')
+        item = Item.objects.create(seller=suspect, category=self.category, name='Scam Item', price=100)
+
+        token = Token.objects.create(user=reporter)
+        url = reverse('scam-report-list')
+        
+        payload = {
+            'reported_user': suspect.id,
+            'item': item.id,
+            'reason': "Suspicious pricing, looks like counterfeit goods"
+        }
+        
+        response = self.client.post(url, payload, content_type='application/json', **{'HTTP_AUTHORIZATION': f"Token {token.key}"})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ScamReport.objects.filter(reporter=reporter).count(), 1)
+        
+        report = ScamReport.objects.filter(reporter=reporter).first()
+        self.assertEqual(report.reported_user, suspect)
+        self.assertEqual(report.item, item)
+        self.assertEqual(report.reason, "Suspicious pricing, looks like counterfeit goods")
+
+    def test_location_filtering(self):
+        """Test that items can be filtered by seller profile location query parameter."""
+        from django.urls import reverse
+
+        seller_kl = User.objects.create_user(username='kl_seller', password='password')
+        seller_kl.profile.location = "Kuala Lumpur"
+        seller_kl.profile.save()
+
+        seller_penang = User.objects.create_user(username='penang_seller', password='password')
+        seller_penang.profile.location = "Penang"
+        seller_penang.profile.save()
+
+        item_kl = Item.objects.create(seller=seller_kl, category=self.category, name='KL Product', price=100)
+        item_penang = Item.objects.create(seller=seller_penang, category=self.category, name='Penang Product', price=200)
+
+        url = reverse('item-list')
+
+        # 1. Search for KL location
+        response = self.client.get(url, {'location': 'Kuala Lumpur'})
+        self.assertEqual(response.status_code, 200)
+        
+        results = response.data
+        item_ids = [x['id'] for x in results]
+        self.assertIn(item_kl.id, item_ids)
+        self.assertNotIn(item_penang.id, item_ids)
+
+        # 2. Search for Penang location
+        response = self.client.get(url, {'location': 'Penang'})
+        self.assertEqual(response.status_code, 200)
+        
+        results = response.data
+        item_ids = [x['id'] for x in results]
+        self.assertIn(item_penang.id, item_ids)
+        self.assertNotIn(item_kl.id, item_ids)
 

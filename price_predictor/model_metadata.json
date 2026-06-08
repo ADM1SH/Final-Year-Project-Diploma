@@ -1,0 +1,13 @@
+{
+    "model_type": "Random Forest Regressor",
+    "r2_score": 0.9880688919916373,
+    "mae": 74.02808984419636,
+    "rmse": 161.51731201341414,
+    "features": [
+        "category",
+        "brand",
+        "condition_score",
+        "duration_days",
+        "original_price"
+    ]
+}

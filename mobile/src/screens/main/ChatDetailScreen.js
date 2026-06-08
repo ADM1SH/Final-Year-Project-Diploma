@@ -1,3 +1,11 @@
+/**
+ * File: ChatDetailScreen.js
+ * Description: Interactive live chat thread screen between buyer and seller.
+ * Project: MyPreLove - Trust-Based Peer-to-Peer Secondhand Mobile App
+ * Course: Diploma in Information Technology - Final Year Project (FYP)
+ * Developer: Adam Anwar
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +21,13 @@ export const ChatDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [chatItem, setChatItem] = useState(route.params?.item || null);
   const flatListRef = useRef();
+  
+  // Custom chat-offer states
+  const [showOfferInput, setShowOfferInput] = useState(false);
+  const [offerPrice, setOfferPrice] = useState('');
+  const [offerPaymentMethod, setOfferPaymentMethod] = useState('CASH');
+  const [isCounterOffer, setIsCounterOffer] = useState(false);
+  const [counterMessageId, setCounterMessageId] = useState(null);
 
   const fetchMessages = async () => {
     try {
@@ -44,8 +59,8 @@ export const ChatDetailScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     fetchMessages();
-    // Real-time Polling: Check for new messages every 3 seconds
-    const interval = setInterval(fetchMessages, 3000);
+    // Real-time Polling: Check for new messages every 5 seconds
+    const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
   }, [userName]);
 
@@ -61,20 +76,28 @@ export const ChatDetailScreen = ({ route, navigation }) => {
     }
   }, [messages, route.params?.item]);
 
-  const sendMessage = async () => {
-    if (input.trim() === '') return;
+  const sendMessage = async (customContent = null) => {
+    const content = customContent || input;
+    if (content.trim() === '') return;
     
-    const content = input;
-    setInput('');
+    if (!customContent) {
+      setInput('');
+    }
 
     try {
-      const userRes = await api.get(`users/`);
-      const allUsers = userRes.data.results || userRes.data;
-      const partner = allUsers.find(u => u.username === userName);
+      let partnerId = route.params?.userId;
       
-      if (partner) {
+      // Fallback only if partnerId is not provided in navigation params
+      if (!partnerId) {
+        const userRes = await api.get(`users/`);
+        const allUsers = userRes.data.results || userRes.data;
+        const partner = allUsers.find(u => u.username === userName);
+        if (partner) partnerId = partner.id;
+      }
+      
+      if (partnerId) {
         await api.post('messages/', {
-          receiver: partner.id,
+          receiver: partnerId,
           content: content,
           item: chatItem?.id
         });
@@ -86,27 +109,66 @@ export const ChatDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const sendPresetMessage = async (text) => {
-    try {
-      const userRes = await api.get(`users/`);
-      const allUsers = userRes.data.results || userRes.data;
-      const partner = allUsers.find(u => u.username === userName);
-      
-      if (partner) {
-        await api.post('messages/', {
-          receiver: partner.id,
-          content: text,
-          item: chatItem?.id
-        });
-        fetchMessages(); // Refresh immediately
-      }
-    } catch (e) {
-      console.error('Send Preset Error:', e.message);
-    }
-  };
-
   const formatTime = (iso) => {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleOpenCounter = (message, currentPrice) => {
+    setIsCounterOffer(true);
+    setCounterMessageId(message.id);
+    setOfferPrice(currentPrice.toString());
+    setShowOfferInput(true);
+  };
+
+  const handleCloseOfferInput = () => {
+    setShowOfferInput(false);
+    setIsCounterOffer(false);
+    setCounterMessageId(null);
+    setOfferPrice('');
+  };
+
+  const sendChatOffer = async () => {
+    const price = parseFloat(offerPrice || chatItem?.price || 0);
+    if (isNaN(price) || price <= 0) {
+      Alert.alert("Error", "Please enter a valid offer price.");
+      return;
+    }
+    
+    if (offerPaymentMethod === 'WALLET') {
+      try {
+        const profRes = await api.get('profiles/me/');
+        const balance = parseFloat(profRes.data.wallet_balance || 0);
+        if (price > balance) {
+          Alert.alert("Insufficient Balance", "Your wallet balance is insufficient to complete this offer. Please top up your wallet in your profile first!");
+          return;
+        }
+      } catch (e) {
+        console.log("Could not check wallet balance:", e.message);
+      }
+    }
+
+    try {
+      if (isCounterOffer && counterMessageId) {
+        await api.post(`messages/${counterMessageId}/counter_offer/`, {
+          price: price
+        });
+        setIsCounterOffer(false);
+        setCounterMessageId(null);
+      } else {
+        await api.post('transactions/', {
+          item: chatItem.id,
+          offer_price: price,
+          payment_method: offerPaymentMethod
+        });
+      }
+      setShowOfferInput(false);
+      setOfferPrice('');
+      fetchMessages(); // Refresh immediately
+    } catch (e) {
+      console.error('Make Chat Offer Error:', e.message);
+      const errorMsg = e.response?.data?.non_field_errors?.[0] || e.response?.data?.error || "Could not complete offer.";
+      Alert.alert("Error", errorMsg);
+    }
   };
 
   const handleUpdateOffer = async (transactionId, newStatus) => {
@@ -185,27 +247,53 @@ export const ChatDetailScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {offerStatus === 'CANCELLED' && (
+            <View style={styles.offerActionsRow}>
+              <TouchableOpacity 
+                style={[styles.offerBtn, { backgroundColor: COLORS.secondary, flex: 1 }]} 
+                onPress={() => handleOpenCounter(message, parsedPrice)}
+              >
+                <Text style={styles.offerBtnText}>Counter Offer</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           
-          <Text style={[styles.messageTime, { color: isMyMessage ? '#E5E7EB' : COLORS.gray }]}>
-            {formatTime(message.timestamp)}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginTop: 4 }}>
+            <Text style={[styles.messageTime, { color: isMyMessage ? '#E5E7EB' : COLORS.gray, marginRight: 4 }]}>
+              {formatTime(message.timestamp)}
+            </Text>
+            {isMyMessage && (
+              <Text style={{ fontSize: 10, color: message.is_read ? '#93C5FD' : '#E5E7EB', fontWeight: '500' }}>
+                {message.is_read ? '✓✓ Seen' : '✓ Sent'}
+              </Text>
+            )}
+          </View>
         </View>
       );
     }
     
     // Normal message bubble
+    const isMine = message.sender_name === user?.username;
     return (
       <View style={[
         styles.messageBubble, 
-        message.sender_name === user?.username ? styles.myMessage : styles.theirMessage
+        isMine ? styles.myMessage : styles.theirMessage
       ]}>
         <Text style={[
           styles.messageText, 
-          message.sender_name === user?.username ? styles.myMessageText : styles.theirMessageText
+          isMine ? styles.myMessageText : styles.theirMessageText
         ]}>
           {message.content}
         </Text>
-        <Text style={styles.messageTime}>{formatTime(message.timestamp)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginTop: 2 }}>
+          <Text style={[styles.messageTime, { marginRight: 4, marginBottom: 0 }]}>{formatTime(message.timestamp)}</Text>
+          {isMine && (
+            <Text style={{ fontSize: 10, color: message.is_read ? '#60A5FA' : '#9CA3AF', fontWeight: '500' }}>
+              {message.is_read ? '✓✓ Seen' : '✓ Sent'}
+            </Text>
+          )}
+        </View>
       </View>
     );
   };
@@ -248,12 +336,19 @@ export const ChatDetailScreen = ({ route, navigation }) => {
             user?.username !== chatItem.seller_name && user?.id !== chatItem.seller && (
               <TouchableOpacity 
                 style={styles.makeOfferHeaderBtn}
-                onPress={() => navigation.navigate('Checkout', { item: chatItem })}
+                onPress={() => setShowOfferInput(true)}
               >
                 <Text style={styles.makeOfferHeaderBtnText}>Make Offer</Text>
               </TouchableOpacity>
             )
           )}
+        </View>
+      )}
+
+      {chatItem && chatItem.is_sold && (
+        <View style={styles.soldGuardBanner}>
+          <Ionicons name="information-circle" size={16} color="white" style={{ marginRight: 6 }} />
+          <Text style={styles.soldGuardText}>This item has already been sold.</Text>
         </View>
       )}
 
@@ -276,12 +371,69 @@ export const ChatDetailScreen = ({ route, navigation }) => {
             data={presets}
             keyExtractor={(item, idx) => idx.toString()}
             renderItem={({ item: presetText }) => (
-              <TouchableOpacity style={styles.presetChip} onPress={() => sendPresetMessage(presetText)}>
+              <TouchableOpacity style={styles.presetChip} onPress={() => sendMessage(presetText)}>
                 <Text style={styles.presetChipText}>{presetText}</Text>
               </TouchableOpacity>
             )}
             contentContainerStyle={{ paddingHorizontal: 15 }}
           />
+        </View>
+      )}
+
+      {showOfferInput && (
+        <View style={styles.offerInputPanel}>
+          <View style={styles.offerInputHeader}>
+            <Text style={styles.offerInputTitle}>
+              {isCounterOffer ? "Counter Offer" : "Make a Chat Offer"}
+            </Text>
+            <TouchableOpacity onPress={handleCloseOfferInput}>
+              <Ionicons name="close" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.offerInputBody}>
+            <View style={styles.offerMiniPriceRow}>
+              <Text style={styles.offerPriceLabel}>Your Offer: RM</Text>
+              <TextInput
+                style={styles.offerMiniInput}
+                keyboardType="decimal-pad"
+                value={offerPrice}
+                onChangeText={setOfferPrice}
+                placeholder={parseFloat(chatItem?.price || 0).toFixed(2)}
+              />
+            </View>
+            
+            {!isCounterOffer && (
+              <View style={styles.offerMethodSelector}>
+                <Text style={styles.methodTitle}>Payment Method:</Text>
+                <View style={styles.methodButtons}>
+                  <TouchableOpacity 
+                    style={[styles.methodBtn, offerPaymentMethod === 'CASH' && styles.activeMethodBtn]}
+                    onPress={() => setOfferPaymentMethod('CASH')}
+                  >
+                    <Text style={[styles.methodBtnText, offerPaymentMethod === 'CASH' && styles.activeMethodBtnText]}>Cash</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.methodBtn, offerPaymentMethod === 'WALLET' && styles.activeMethodBtn]}
+                    onPress={() => setOfferPaymentMethod('WALLET')}
+                  >
+                    <Text style={[styles.methodBtnText, offerPaymentMethod === 'WALLET' && styles.activeMethodBtnText]}>Wallet</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.methodBtn, offerPaymentMethod === 'TRANSFER' && styles.activeMethodBtn]}
+                    onPress={() => setOfferPaymentMethod('TRANSFER')}
+                  >
+                    <Text style={[styles.methodBtnText, offerPaymentMethod === 'TRANSFER' && styles.activeMethodBtnText]}>Transfer</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            <TouchableOpacity style={styles.sendOfferSubmitBtn} onPress={sendChatOffer}>
+              <Text style={styles.sendOfferSubmitBtnText}>
+                {isCounterOffer ? "Send Counter Offer" : "Send Custom Offer"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -305,7 +457,7 @@ export const ChatDetailScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { 
     paddingTop: 50, 
@@ -314,39 +466,76 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between', 
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1, 
     borderBottomColor: COLORS.lightGray,
     zIndex: 10
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: '600', 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
   messageList: { padding: 20, paddingBottom: 40 },
-  messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 18, marginBottom: 15 },
-  myMessage: { alignSelf: 'flex-end', backgroundColor: '#064E3B', borderBottomRightRadius: 2 },
-  theirMessage: { alignSelf: 'flex-start', backgroundColor: '#F3F4F6', borderBottomLeftRadius: 2 },
-  messageText: { fontSize: 15, lineHeight: 20 },
+  messageBubble: { maxWidth: '80%', padding: 14, borderRadius: 18, marginBottom: 15 },
+  myMessage: { alignSelf: 'flex-end', backgroundColor: COLORS.primary, borderBottomRightRadius: 2 },
+  theirMessage: { alignSelf: 'flex-start', backgroundColor: COLORS.lightGray, borderBottomLeftRadius: 2 },
+  messageText: { fontSize: 15, lineHeight: 20, fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif' },
   myMessageText: { color: 'white' },
   theirMessageText: { color: COLORS.black },
   messageTime: { fontSize: 10, color: COLORS.gray, marginTop: 4, alignSelf: 'flex-end' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 15, paddingBottom: 35, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  inputContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 15, 
+    borderTopWidth: 1, 
+    borderTopColor: COLORS.lightGray,
+    backgroundColor: COLORS.white
+  },
   attachBtn: { marginRight: 10 },
-  input: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 15, paddingVertical: 8, maxHeight: 100, fontSize: 15 },
-  sendBtn: { marginLeft: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: '#064E3B', justifyContent: 'center', alignItems: 'center' },
+  input: { 
+    flex: 1, 
+    backgroundColor: COLORS.lightGray, 
+    borderRadius: 20, 
+    paddingHorizontal: 15, 
+    paddingVertical: 8, 
+    maxHeight: 100, 
+    fontSize: 15,
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif'
+  },
+  sendBtn: { 
+    marginLeft: 10, 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: COLORS.secondary, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
 
   // Sticky Item Header
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    backgroundColor: '#FAFDFB',
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 9
   },
   itemThumbnail: {
     width: 48,
     height: 48,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: COLORS.lightGray,
   },
   itemMeta: {
     flex: 1,
@@ -356,6 +545,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.black,
     marginBottom: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif'
   },
   itemPrice: {
     fontSize: 14,
@@ -363,7 +553,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   soldBadge: {
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.danger,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -374,10 +564,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   makeOfferHeaderBtn: {
-    backgroundColor: '#064E3B',
+    backgroundColor: COLORS.secondary,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 16,
   },
   makeOfferHeaderBtnText: {
     color: 'white',
@@ -388,42 +578,54 @@ const styles = StyleSheet.create({
   // Preset Reply Chips
   presetsRow: {
     paddingVertical: 10,
-    backgroundColor: '#FAFDFB',
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: COLORS.lightGray,
   },
   presetChip: {
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#064E3B',
+    borderColor: COLORS.primary,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 6,
     marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
+    elevation: 1
   },
   presetChipText: {
-    color: '#064E3B',
+    color: COLORS.primary,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 
   // Interactive Offer Card Bubbles
   offerCard: {
     width: '75%',
-    padding: 14,
+    padding: 16,
     borderRadius: 16,
     marginBottom: 15,
-    borderWidth: 1,
   },
   myOfferCard: {
     alignSelf: 'flex-end',
-    backgroundColor: '#064E3B',
-    borderColor: '#043427',
+    backgroundColor: COLORS.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2
   },
   theirOfferCard: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FAFDFB',
-    borderColor: '#E5E7EB',
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
   },
   offerHeader: {
     flexDirection: 'row',
@@ -460,17 +662,126 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 18,
   },
   acceptBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.success,
   },
   declineBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.danger,
   },
   offerBtnText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 13,
+  },
+  offerInputPanel: {
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  offerInputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  offerInputTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
+  },
+  offerInputBody: {
+    gap: 12,
+  },
+  offerMiniPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  offerPriceLabel: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  offerMiniInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  offerMethodSelector: {
+    marginTop: 4,
+  },
+  methodTitle: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 6,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  methodButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  methodBtn: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.gray + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+  },
+  activeMethodBtn: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  methodBtnText: {
+    fontSize: 13,
+    color: COLORS.gray,
+    fontWeight: '600',
+  },
+  activeMethodBtnText: {
+    color: 'white',
+  },
+  sendOfferSubmitBtn: {
+    backgroundColor: COLORS.secondary,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  sendOfferSubmitBtnText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  soldGuardBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.danger,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+  },
+  soldGuardText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
   },
 });

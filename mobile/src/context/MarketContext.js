@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
 import api from '../api/client';
+import { useAuth } from './AuthContext';
 
 const MarketContext = createContext();
 
@@ -8,10 +9,11 @@ export const MarketProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const refreshMarket = async () => {
     try {
-      console.log('Refreshing market from API...');
       const [catRes, itemRes, favRes] = await Promise.all([
         api.get('categories/'), 
         api.get('items/'),
@@ -26,9 +28,10 @@ export const MarketProvider = ({ children }) => {
       if (itemsData) setItems(itemsData);
       if (favsData) setFavorites(favsData.map(f => f.item));
       
-      console.log('Market refreshed successfully.');
     } catch (e) {
       console.error('Refresh Market Error:', e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +67,7 @@ export const MarketProvider = ({ children }) => {
       display_image: localImages.length > 0 ? localImages[0] : null,
       images: localImages.map(uri => ({ image: uri })),
       eco_impact: (parseFloat(formData.weight || 0) * 2.5).toFixed(1),
-      seller: { username: 'adamanwar' },
+      seller: { username: user?.username || 'adamanwar' },
       description: formData.description
     };
     
@@ -100,7 +103,7 @@ export const MarketProvider = ({ children }) => {
   };
 
   return (
-    <MarketContext.Provider value={{ items, categories, favorites, refreshMarket, addItem, toggleFavorite }}>
+    <MarketContext.Provider value={{ items, categories, favorites, refreshMarket, addItem, toggleFavorite, loading }}>
       {children}
     </MarketContext.Provider>
   );

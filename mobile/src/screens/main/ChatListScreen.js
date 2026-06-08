@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
@@ -19,19 +20,7 @@ export const ChatListScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // We need the current user's ID to correctly identify the partner
-  const [currentUserId, setCurrentUserId] = useState(null);
 
-  useEffect(() => {
-    const fetchMe = async () => {
-      try {
-        const res = await api.get('profiles/');
-        const myProfile = res.data.results ? res.data.results.find(p => p.username === user?.username) : res.data.find(p => p.username === user?.username);
-        if (myProfile) setCurrentUserId(myProfile.id);
-      } catch (e) {}
-    };
-    if (user) fetchMe();
-  }, [user]);
 
   const fetchChats = async () => {
     try {
@@ -111,24 +100,32 @@ export const ChatListScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logoText}>MyPrelove</Text>
-        <TouchableOpacity onPress={fetchChats}>
-          <Ionicons name="reload" size={20} color={COLORS.black}/>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color={COLORS.gray} />
-          <TextInput 
-            placeholder="Search your conversations..." 
-            style={styles.searchInput} 
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+      <LinearGradient
+        colors={[COLORS.primary, '#00421e']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerTop}>
+          <Text style={styles.logoText}>MyPrelove</Text>
+          <TouchableOpacity onPress={fetchChats} style={styles.iconCircle}>
+            <Ionicons name="reload" size={18} color={COLORS.primary}/>
+          </TouchableOpacity>
         </View>
-      </View>
+
+        <View style={styles.searchSection}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={20} color={COLORS.gray} />
+            <TextInput 
+              placeholder="Search your conversations..." 
+              style={styles.searchInput} 
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor={COLORS.gray}
+            />
+          </View>
+        </View>
+      </LinearGradient>
 
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
@@ -154,26 +151,80 @@ export const ChatListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-  header: { paddingTop: 60, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  logoText: { fontSize: 24, fontWeight: 'bold', color: '#064E3B' },
-  searchSection: { padding: 20 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.lightGray, borderRadius: 12, paddingHorizontal: 15, height: 45 },
-  searchInput: { marginLeft: 10, flex: 1, fontSize: 15 },
-  list: { paddingBottom: 100 },
-  chatItem: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 15, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  header: { 
+    paddingTop: 60, 
+    paddingHorizontal: 20, 
+    paddingBottom: 25,
+    borderBottomLeftRadius: 24, 
+    borderBottomRightRadius: 24
+  },
+  headerTop: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1
+  },
+  logoText: { 
+    fontSize: 28, 
+    color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
+  searchSection: { paddingTop: 5, paddingBottom: 10 },
+  searchBar: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.white, 
+    borderRadius: 25, 
+    paddingHorizontal: 15, 
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2
+  },
+  searchInput: { marginLeft: 10, flex: 1, fontSize: 15, color: COLORS.black },
+  list: { paddingBottom: 100, paddingTop: 10 },
+  chatItem: { 
+    flexDirection: 'row', 
+    backgroundColor: COLORS.white,
+    padding: 16, 
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2
+  },
   avatarContainer: { position: 'relative' },
   avatar: { width: 56, height: 56, borderRadius: 28 },
-  placeholderAvatar: { backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
-  avatarInitial: { fontSize: 20, fontWeight: 'bold', color: '#064E3B' },
-  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: COLORS.success, borderWidth: 2, borderColor: 'white' },
+  placeholderAvatar: { backgroundColor: COLORS.lightGray, justifyContent: 'center', alignItems: 'center' },
+  avatarInitial: { fontSize: 20, fontWeight: 'bold', color: COLORS.primary },
+  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: COLORS.primary, borderWidth: 2, borderColor: 'white' },
   chatInfo: { flex: 1, marginLeft: 15 },
   chatHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
   chatName: { fontSize: 16, fontWeight: 'bold', color: COLORS.black },
   chatTime: { fontSize: 12, color: COLORS.gray },
   messageRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   chatMessage: { fontSize: 14, color: COLORS.gray, flex: 1 },
-  badge: { backgroundColor: COLORS.danger, width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
+  badge: { backgroundColor: COLORS.secondary, width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
   badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', marginTop: 100 },
   emptyText: { color: COLORS.gray, marginTop: 10 }

@@ -1,3 +1,10 @@
+/**
+ * File: CheckoutScreen.js
+ * Description: Checkout screen offering secure escrow checkout, wallet balances checks, and buyer protection info.
+ * Project: MyPreLove - Trust-Based Peer-to-Peer Secondhand Mobile App
+ * Course: Diploma in Information Technology - Final Year Project (FYP)
+ * Developer: Adam Anwar & DIT Team
+ */
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -138,6 +145,16 @@ export const CheckoutScreen = ({ route, navigation }) => {
           ))}
         </View>
 
+        <View style={styles.protectionBox}>
+          <Ionicons name="shield-checkmark" size={22} color={COLORS.ecoText} />
+          <View style={styles.protectionTextContainer}>
+            <Text style={styles.protectionTitle}>Buyer Protection Active</Text>
+            <Text style={styles.protectionText}>
+              Your payment is held securely in escrow. If the item doesn't match the description or condition, you can report the seller for an admin review to dispute the funds.
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.infoBox}>
           <Ionicons name="information-circle" size={20} color={COLORS.gray} />
           <Text style={styles.infoText}>
@@ -168,7 +185,7 @@ export const CheckoutScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   header: { 
     paddingTop: 50, 
     paddingBottom: 15, 
@@ -176,34 +193,148 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between', 
-    backgroundColor: 'white', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#F3F4F6',
+    backgroundColor: COLORS.background, 
     zIndex: 10
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: '600', 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
+  },
   scrollContent: { padding: 20 },
-  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: COLORS.gray, marginBottom: 12, letterSpacing: 0.5 },
-  itemSummary: { backgroundColor: 'white', padding: 15, borderRadius: 12, marginBottom: 25 },
-  itemName: { fontSize: 16, fontWeight: 'bold', color: COLORS.black },
+  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: COLORS.gray, marginBottom: 12, letterSpacing: 1 },
+  itemSummary: { 
+    backgroundColor: COLORS.white, 
+    padding: 18, 
+    borderRadius: 16, 
+    marginBottom: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  itemName: { fontSize: 17, fontWeight: 'bold', color: COLORS.black },
   itemOriginalPrice: { fontSize: 14, color: COLORS.gray, marginTop: 4 },
   section: { marginBottom: 25 },
-  priceInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', paddingHorizontal: 15, height: 56, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  priceInputContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.white, 
+    paddingHorizontal: 15, 
+    height: 56, 
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
   currencyPrefix: { fontSize: 18, fontWeight: 'bold', color: COLORS.black, marginRight: 10 },
   priceInput: { flex: 1, fontSize: 18, fontWeight: 'bold', color: COLORS.primary },
-  fixedPriceContainer: { backgroundColor: '#F3F4F6', padding: 15, borderRadius: 12 },
+  fixedPriceContainer: { 
+    backgroundColor: COLORS.white, 
+    padding: 18, 
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
   fixedPrice: { fontSize: 18, fontWeight: 'bold', color: COLORS.black },
   fixedLabel: { fontSize: 12, color: COLORS.gray, marginTop: 4 },
-  paymentOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 15, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#E5E7EB' },
-  selectedOption: { borderColor: COLORS.primary, backgroundColor: '#ECFDF5' },
+  paymentOption: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.white, 
+    padding: 16, 
+    borderRadius: 16, 
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: 'transparent'
+  },
+  selectedOption: { 
+    borderColor: COLORS.primary, 
+    backgroundColor: COLORS.eco 
+  },
   paymentLabel: { flex: 1, marginLeft: 15, fontSize: 15, color: COLORS.black },
   selectedLabel: { fontWeight: 'bold', color: COLORS.primary },
-  infoBox: { flexDirection: 'row', backgroundColor: '#F3F4F6', padding: 15, borderRadius: 12, alignItems: 'center' },
+  infoBox: { 
+    flexDirection: 'row', 
+    backgroundColor: COLORS.lightGray, 
+    padding: 16, 
+    borderRadius: 16, 
+    alignItems: 'center',
+    marginTop: 10
+  },
   infoText: { flex: 1, marginLeft: 10, fontSize: 12, color: COLORS.gray, lineHeight: 18 },
-  footer: { backgroundColor: 'white', padding: 20, paddingBottom: 40, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  footer: { 
+    backgroundColor: COLORS.white, 
+    padding: 20, 
+    paddingBottom: Platform.OS === 'ios' ? 35 : 20, 
+    borderTopWidth: 1, 
+    borderTopColor: COLORS.lightGray,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 5
+  },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   totalLabel: { fontSize: 14, color: COLORS.gray },
   totalValue: { fontSize: 20, fontWeight: 'bold', color: COLORS.primary },
-  confirmBtn: { backgroundColor: '#064E3B', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  confirmBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' }
+  confirmBtn: { 
+    backgroundColor: COLORS.secondary, 
+    height: 56, 
+    borderRadius: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  confirmBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  protectionBox: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.eco,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'flex-start',
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  protectionTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  protectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.ecoText,
+    marginBottom: 4,
+  },
+  protectionText: {
+    fontSize: 12,
+    color: COLORS.ecoText,
+    lineHeight: 18,
+  }
 });

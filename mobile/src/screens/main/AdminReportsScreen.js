@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import api from '../../api/client';
@@ -40,7 +40,13 @@ export const AdminReportsScreen = ({ navigation }) => {
           text: "Confirm", 
           onPress: async () => {
             try {
-              await api.patch(`scam-reports/${reportId}/`, { status: newStatus });
+              if (newStatus === 'RESOLVED') {
+                await api.post(`scam-reports/${reportId}/approve/`);
+              } else if (newStatus === 'DISMISSED') {
+                await api.post(`scam-reports/${reportId}/dismiss/`);
+              } else {
+                await api.patch(`scam-reports/${reportId}/`, { status: newStatus });
+              }
               setReports(reports.map(r => r.id === reportId ? { ...r, status: newStatus } : r));
               Alert.alert("Success", `Report marked as ${newStatus}.`);
             } catch (err) {
@@ -149,27 +155,51 @@ export const AdminReportsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', marginLeft: 15, flex: 1 },
+  header: { 
+    paddingTop: 60, 
+    paddingBottom: 20, 
+    paddingHorizontal: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.background
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: '600', 
+    marginLeft: 15, 
+    flex: 1, 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
   badge: { backgroundColor: COLORS.danger, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   badgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   list: { padding: 15 },
-  reportCard: { backgroundColor: 'white', padding: 20, borderRadius: 16, marginBottom: 15, elevation: 2 },
+  reportCard: { 
+    backgroundColor: COLORS.white, 
+    padding: 20, 
+    borderRadius: 16, 
+    marginBottom: 15, 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
   statusText: { fontSize: 11, fontWeight: 'bold' },
   date: { fontSize: 12, color: COLORS.gray },
   reportContent: { marginBottom: 15 },
   row: { flexDirection: 'row', marginBottom: 5 },
   label: { fontSize: 13, color: COLORS.gray, width: 100 },
-  value: { fontSize: 13, color: '#111827', fontWeight: '500' },
+  value: { fontSize: 13, color: COLORS.black, fontWeight: '500' },
   reportedName: { color: COLORS.danger },
   reasonLabel: { fontSize: 13, color: COLORS.gray, marginTop: 10, marginBottom: 5 },
-  reasonText: { fontSize: 14, color: '#4B5563', backgroundColor: '#F9FAFB', padding: 10, borderRadius: 8, fontStyle: 'italic' },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 15 },
-  actionBtn: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8, marginLeft: 10 },
+  reasonText: { fontSize: 14, color: COLORS.black, backgroundColor: COLORS.lightGray, padding: 12, borderRadius: 12, fontStyle: 'italic', opacity: 0.8 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: COLORS.lightGray, paddingTop: 15 },
+  actionBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, marginLeft: 10 },
   actionBtnText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', marginTop: 100 },
   emptyText: { color: COLORS.gray, marginTop: 15, fontSize: 16 }

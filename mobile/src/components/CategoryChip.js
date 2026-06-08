@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/constants';
 
@@ -60,11 +60,11 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 12,
     color: COLORS.gray,
-    fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Medium',
   },
   activeText: {
     color: COLORS.black,
-    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Bold',
   },
 });
 

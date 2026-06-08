@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import api from '../../api/client';
@@ -81,15 +81,41 @@ export const AdminItemManagementScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', marginLeft: 15, flex: 1 },
+  header: { 
+    paddingTop: 60, 
+    paddingBottom: 20, 
+    paddingHorizontal: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.background
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: '600', 
+    marginLeft: 15, 
+    flex: 1, 
+    color: COLORS.black,
+    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
+  },
   list: { padding: 20 },
-  itemCard: { backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 10, flexDirection: 'row', alignItems: 'center', elevation: 2 },
-  thumbnail: { width: 50, height: 50, borderRadius: 8, backgroundColor: '#F3F4F6' },
+  itemCard: { 
+    backgroundColor: COLORS.white, 
+    padding: 14, 
+    borderRadius: 16, 
+    marginBottom: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  thumbnail: { width: 50, height: 50, borderRadius: 8, backgroundColor: COLORS.lightGray },
   itemInfo: { flex: 1, marginLeft: 15 },
-  name: { fontSize: 16, fontWeight: 'bold', color: '#111827' },
+  name: { fontSize: 16, fontWeight: 'bold', color: COLORS.black },
   price: { fontSize: 14, color: COLORS.primary, fontWeight: '600', marginTop: 2 },
   seller: { fontSize: 12, color: COLORS.gray, marginTop: 1 },
   deleteBtn: { padding: 10 }

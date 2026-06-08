@@ -18,7 +18,7 @@ def final_perfect_relist():
     Item.objects.all().delete()
     Notification.objects.all().delete()
 
-    source_dir = '/Users/adamanwar/Desktop/FYP/items'
+    source_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'items')
     
     # ... (mapping remains same) ...
     perfect_mapping = [
