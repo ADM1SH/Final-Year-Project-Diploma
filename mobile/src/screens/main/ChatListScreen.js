@@ -139,7 +139,7 @@ export const ChatListScreen = ({ navigation }) => {
         style={styles.header}
       >
         <View style={styles.headerTop}>
-          <Text style={styles.logoText}>MyPrelove</Text>
+          <Text style={styles.logoText}>My Preloved</Text>
           <TouchableOpacity onPress={fetchChats} style={styles.iconCircle}>
             <Ionicons name="reload" size={18} color={COLORS.primary}/>
           </TouchableOpacity>

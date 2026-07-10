@@ -54,7 +54,7 @@ export const RegisterScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Join MyPrelove</Text>
+        <Text style={styles.title}>Join My Preloved</Text>
         <Text style={styles.subtitle}>Start your sustainable journey today.</Text>
 
         <TextInput

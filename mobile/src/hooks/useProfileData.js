@@ -236,7 +236,7 @@ export const useProfileData = (
             });
             Alert.alert(
                 "Report Filed",
-                "Thank you for helping keep MyPreLove safe. Our admins will review this.",
+                "Thank you for helping keep My Preloved safe. Our admins will review this.",
             );
             if (isMounted.current) {
                 setShowReportModal(false);

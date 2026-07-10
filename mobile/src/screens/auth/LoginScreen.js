@@ -102,7 +102,7 @@ export const LoginScreen = ({ navigation }) => {
           <View style={styles.logoCircle}>
             <Ionicons name="leaf" size={32} color={COLORS.primary} />
           </View>
-          <Text style={styles.logo}>MyPrelove</Text>
+          <Text style={styles.logo}>My Preloved</Text>
           <Text style={styles.tagline}>Love it again.</Text>
         </View>
 

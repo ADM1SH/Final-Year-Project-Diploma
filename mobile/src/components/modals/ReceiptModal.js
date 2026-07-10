@@ -22,7 +22,7 @@ const generateReceiptHTML = (tx) => {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MyPreLove Receipt MPL-TX-${txId}</title>
+<title>My Preloved Receipt MPL-TX-${txId}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; padding: 30px; }
@@ -57,7 +57,7 @@ const generateReceiptHTML = (tx) => {
 <div class="receipt">
   <div class="header">
     <div class="logo-icon">🛍️</div>
-    <div class="brand">MYPRELOVE</div>
+    <div class="brand">MY PRELOVED</div>
     <div class="brand-sub">Love it again. Sustainable Secondhand.</div>
     <div class="paid-stamp">PAID</div>
   </div>
@@ -93,7 +93,7 @@ const generateReceiptHTML = (tx) => {
   <div class="footer">
     <div class="barcode">| | | MPL-TX-${txId} | | |</div>
     <div class="ref-id">Thank you for shopping sustainably!</div>
-    <div class="ref-id" style="margin-top:4px;font-size:11px;color:#D1D5DB">MyPreLove Sdn. Bhd. · support@myprelove.my</div>
+    <div class="ref-id" style="margin-top:4px;font-size:11px;color:#D1D5DB">My Preloved Sdn. Bhd. · support@mypreloved.my</div>
   </div>
 </div>
 </body>
@@ -131,7 +131,7 @@ export const ReceiptModal = ({ visible, onClose, selectedReceipt }) => {
             if (isAvailable) {
                 await Sharing.shareAsync(uri, {
                     mimeType: 'application/pdf',
-                    dialogTitle: `MyPreLove Receipt MPL-TX-${tx.id}`,
+                    dialogTitle: `My Preloved Receipt MPL-TX-${tx.id}`,
                     UTI: 'com.adobe.pdf',
                 });
             } else {
@@ -158,7 +158,7 @@ export const ReceiptModal = ({ visible, onClose, selectedReceipt }) => {
                             <View style={styles.successIconWrapper}>
                                 <Ionicons name="checkmark-circle" size={44} color="#10B981" />
                             </View>
-                            <Text style={styles.merchantName}>MYPRELOVE OFFICIAL RECEIPT</Text>
+                            <Text style={styles.merchantName}>MY PRELOVED OFFICIAL RECEIPT</Text>
                             <Text style={styles.merchantSub}>Love it again. Sustainable Secondhand.</Text>
                             <View style={styles.paidStamp}>
                                 <Text style={styles.paidStampText}>PAID</Text>

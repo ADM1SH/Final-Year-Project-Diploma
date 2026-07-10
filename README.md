@@ -1,7 +1,7 @@
-# MyPreLove: Eco-Conscious Secondhand Marketplace
+# My Preloved: Eco-Conscious Secondhand Marketplace
 
 ## Project Overview
-**MyPreLove** is a secure, trust-focused secondhand marketplace mobile app. It aims to eliminate fraud and subjective condition grading that are prevalent in platforms like Carousell and Facebook Marketplace, with an objective A-D grading system, an escrow-style Stripe payment flow, and an automated trust score.
+**My Preloved** is a secure, trust-focused secondhand marketplace mobile app. It aims to eliminate fraud and subjective condition grading that are prevalent in platforms like Carousell and Facebook Marketplace, with an objective A-D grading system, an escrow-style Stripe payment flow, and an automated trust score.
 
 This repository holds both halves of the project:
 - **`api/` + `core/`** — a Django 6 REST API backend (JWT auth, SQLite in dev).

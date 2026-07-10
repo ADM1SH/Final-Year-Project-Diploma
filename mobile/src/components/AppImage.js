@@ -8,7 +8,7 @@ import { Image } from 'react-native';
 // trigger re-renders or create a new object on every render call.
 const NGROK_HEADERS = {
     'ngrok-skip-browser-warning': 'true',
-    'User-Agent': 'MyPreLove-App',
+    'User-Agent': 'My-Preloved-App',
 };
 
 const AppImage = ({ source, ...props }) => {

@@ -7,7 +7,7 @@ export default function QRGeneratorModal({ visible, onClose, transaction }) {
   if (!transaction) return null;
 
   const qrData = JSON.stringify({
-    type: 'MYPRELOVE_TRANSACTION',
+    type: 'MY_PRELOVED_TRANSACTION',
     transactionId: transaction.id,
     amount: transaction.final_price
   });

@@ -384,7 +384,7 @@ export const ExploreScreen = ({ navigation }) => {
                 <View style={styles.headerTop}>
                     <View>
                         <Text style={styles.greeting}>{greeting},</Text>
-                        <Text style={styles.logoText}>MyPreLove</Text>
+                        <Text style={styles.logoText}>My Preloved</Text>
                     </View>
                     <View style={styles.headerActions}>
                         <TouchableOpacity

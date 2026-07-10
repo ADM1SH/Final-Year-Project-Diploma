@@ -1,4 +1,4 @@
-# MyPreLove (FYP) — Handoff Notes
+# My Preloved (FYP) — Handoff Notes
 
 Django REST Framework backend (`api` app, `core` settings, SQLite dev DB) + React Native/Expo mobile frontend (`mobile/`). Eco-conscious peer-to-peer secondhand marketplace with escrow-style Stripe payments, chat-based offers/counter-offers, trust scores, and admin moderation.
 

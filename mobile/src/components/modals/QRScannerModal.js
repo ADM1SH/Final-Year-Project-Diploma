@@ -26,12 +26,12 @@ export default function QRScannerModal({ visible, onClose, onScanSuccess }) {
 
     try {
       const payload = JSON.parse(data);
-      if (payload.type === 'MYPRELOVE_TRANSACTION' && payload.transactionId) {
+      if (payload.type === 'MY_PRELOVED_TRANSACTION' && payload.transactionId) {
 
         await onScanSuccess(payload.transactionId);
 
       } else {
-        Alert.alert('Invalid QR Code', 'This is not a valid MyPreLove meetup code.', [
+        Alert.alert('Invalid QR Code', 'This is not a valid My Preloved meetup code.', [
           { text: 'Try Again', onPress: () => setScanned(false) }
         ]);
         setIsProcessing(false);

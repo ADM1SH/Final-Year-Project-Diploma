@@ -1,5 +1,5 @@
 #!/bin/bash
-# start.sh — one-command dev startup for MyPreLove.
+# start.sh — one-command dev startup for My Preloved.
 # Replaces manually opening 3 terminal tabs: runs the Django backend and the
 # ngrok tunnel in the background, then runs Expo in the foreground so you can
 # still see the QR code / Metro bundler output and use its keyboard shortcuts.

@@ -57,12 +57,12 @@ export const CheckoutScreen = ({ route, navigation }) => {
 
             // 3. Initialize Payment Sheet
             const { error: initError } = await initPaymentSheet({
-                merchantDisplayName: 'MyPreLove Marketplace',
+                merchantDisplayName: 'My Preloved Marketplace',
                 paymentIntentClientSecret: clientSecret,
                 allowsDelayedPaymentMethods: true,
-                returnURL: 'myprelove://stripe-redirect',
+                returnURL: 'mypreloved://stripe-redirect',
                 defaultBillingDetails: {
-                    name: 'MyPreLove User',
+                    name: 'My Preloved User',
                 }
             });
 

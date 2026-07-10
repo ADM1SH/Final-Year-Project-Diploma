@@ -494,7 +494,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         Notification.objects.create(
             user=profile.user,
             title="Account Reinstated ✅",
-            content="Your account suspension has been lifted. Welcome back to MyPreLove!",
+            content="Your account suspension has been lifted. Welcome back to My Preloved!",
         )
         return Response({'success': True, 'message': f'User {profile.user.username} has been unsuspended.'})
 

@@ -139,7 +139,7 @@ export const useItemDetails = (routeItemId, currentUser, navigation) => {
         if (!item) return;
         try {
             // Format item summary message and trigger native share dialog
-            const message = `Check out this great secondhand find on MyPreLove!\n\n📦 Item: ${item.name}\n💰 Price: RM ${parseFloat(item.price || 0).toFixed(2)}\n🌱 Eco-Impact: Saves ${item.eco_impact || 10}kg of CO2!\n\nView listing: myprelove://item/${item.id}`;
+            const message = `Check out this great secondhand find on My Preloved!\n\n📦 Item: ${item.name}\n💰 Price: RM ${parseFloat(item.price || 0).toFixed(2)}\n🌱 Eco-Impact: Saves ${item.eco_impact || 10}kg of CO2!\n\nView listing: mypreloved://item/${item.id}`;
             await Share.share({ message, title: item.name });
         } catch (error) {
             console.warn("Error sharing item:", error.message);

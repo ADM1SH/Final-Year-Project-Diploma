@@ -61,7 +61,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
     Notification.objects.create(
         user=instance,
-        title="Welcome to MyPreLove!",
+        title="Welcome to My Preloved!",
         content="Start buying and selling with trust.",
     )
 
