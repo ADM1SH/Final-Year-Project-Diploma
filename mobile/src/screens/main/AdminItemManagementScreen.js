@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Image, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import AppImage from '../../components/AppImage';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import api from '../../api/client';
@@ -29,9 +30,9 @@ export const AdminItemManagementScreen = ({ navigation }) => {
       `Remove "${name}" from the marketplace?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Remove", 
-          style: "destructive", 
+        {
+          text: "Remove",
+          style: "destructive",
           onPress: async () => {
             try {
               await api.delete(`items/${itemId}/`);
@@ -48,7 +49,7 @@ export const AdminItemManagementScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => (
     <View style={styles.itemCard}>
-      <Image source={{ uri: item.display_image }} style={styles.thumbnail} />
+      <AppImage source={{ uri: item.display_image }} style={styles.thumbnail} />
       <View style={styles.itemInfo}>
         <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
         <Text style={styles.price}>RM {parseFloat(item.price || 0).toFixed(2)}</Text>
@@ -83,30 +84,30 @@ export const AdminItemManagementScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    paddingTop: 60, 
-    paddingBottom: 20, 
-    paddingHorizontal: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.background
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: '600', 
-    marginLeft: 15, 
-    flex: 1, 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 15,
+    flex: 1,
     color: COLORS.black,
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
   list: { padding: 20 },
-  itemCard: { 
-    backgroundColor: COLORS.white, 
-    padding: 14, 
-    borderRadius: 16, 
-    marginBottom: 12, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  itemCard: {
+    backgroundColor: COLORS.white,
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,

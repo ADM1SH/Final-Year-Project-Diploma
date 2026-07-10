@@ -1,5 +1,3 @@
-# Migration 0006: Scam reports.
-
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models

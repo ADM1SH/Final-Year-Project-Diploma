@@ -1,13 +1,17 @@
-/**
- * File: ExploreScreen.js
- * Description: Main marketplace feed displaying category chips and listing cards.
- * Project: MyPreLove - Trust-Based Peer-to-Peer Secondhand Mobile App
- * Course: Diploma in Information Technology - Final Year Project (FYP)
- * Developer: Adam Anwar
- */
-
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, TextInput, TouchableOpacity, StatusBar, ActivityIndicator, RefreshControl, Platform, Modal, Alert } from 'react-native';
+// ExploreScreen displays a feed of available marketplace listings and sellers.
+// It provides features for searching, category filtering, location/price filtering, and sorting.
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import {
+    View,
+    Text,
+    FlatList,
+    ScrollView,
+    TextInput,
+    TouchableOpacity,
+    StatusBar,
+    RefreshControl,
+    Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,954 +19,575 @@ import { COLORS } from '../../utils/constants';
 import CategoryChip from '../../components/CategoryChip';
 import ItemCard from '../../components/ItemCard';
 import { useMarket } from '../../context/MarketContext';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import { FeedCardSkeleton, SellerRowSkeleton } from '../../components/SkeletonLoader';
 import EmptyState from '../../components/EmptyState';
+import { FilterModal } from '../../components/modals/FilterModal';
+import { EcoLeaderboardModal } from '../../components/modals/EcoLeaderboardModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from './styles/ExploreScreenStyles';
 
-export const ExploreScreen = ({ navigation }) => {
-  const { items, categories, favorites, refreshMarket, toggleFavorite, loading: loadingItems } = useMarket();
-  const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('Items'); // 'Items' or 'Users'
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const [selectedLocation, setSelectedLocation] = useState('All');
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const locations = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Perak', 'Melaka', 'Sarawak', 'Sabah'];
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [tempLocation, setTempLocation] = useState('All');
-  const [minPriceInput, setMinPriceInput] = useState('');
-  const [maxPriceInput, setMaxPriceInput] = useState('');
-  
-  const [userResults, setUserResults] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'price_asc', 'price_desc', 'trusted_seller'
-  const [showEcoLeaderboard, setShowEcoLeaderboard] = useState(false);
-  const [ecoLeaderboardData, setEcoLeaderboardData] = useState([]);
-  const [loadingEco, setLoadingEco] = useState(false);
+// Location list is static data — defined once outside the component.
+const LOCATIONS = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Perak', 'Melaka', 'Sarawak', 'Sabah'];
 
-  const loadRecentSearches = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('recent_searches');
-      if (stored) {
-        setRecentSearches(JSON.parse(stored));
-      }
-    } catch (e) {}
-  };
+// Maximum number of recent searches to persist.
+const MAX_RECENT_SEARCHES = 5;
 
-  useEffect(() => {
-    loadRecentSearches();
-  }, []);
+// Header gradient colours — stable array to avoid unnecessary LinearGradient re-renders.
+const HEADER_GRADIENT = [COLORS.primary, '#00421e'];
+const HEADER_GRADIENT_START = { x: 0, y: 0 };
+const HEADER_GRADIENT_END   = { x: 1, y: 1 };
 
-  useEffect(() => {
-    if (showLocationModal) {
-      setTempLocation(selectedLocation);
-      setMinPriceInput(minPrice);
-      setMaxPriceInput(maxPrice);
-    }
-  }, [showLocationModal]);
-
-  const handleApplyFilters = () => {
-    setSelectedLocation(tempLocation);
-    setMinPrice(minPriceInput);
-    setMaxPrice(maxPriceInput);
-    setShowLocationModal(false);
-  };
-
-  const handleResetFilters = () => {
-    setTempLocation('All');
-    setMinPriceInput('');
-    setMaxPriceInput('');
-    setSelectedLocation('All');
-    setMinPrice('');
-    setMaxPrice('');
-    setShowLocationModal(false);
-  };
-
-  const handleOpenEcoLeaderboard = async () => {
-    setShowEcoLeaderboard(true);
-    setLoadingEco(true);
-    try {
-      const res = await api.get('profiles/eco_leaderboard/');
-      setEcoLeaderboardData(res.data);
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Error", "Could not load ECO Leaderboard.");
-    } finally {
-      setLoadingEco(false);
-    }
-  };
-
-  const saveSearchQuery = async (query) => {
-    if (!query || !query.trim()) return;
-    const trimmed = query.trim();
-    try {
-      let searches = [...recentSearches];
-      searches = searches.filter(s => s !== trimmed);
-      searches.unshift(trimmed);
-      if (searches.length > 5) searches = searches.slice(0, 5);
-      setRecentSearches(searches);
-      await AsyncStorage.setItem('recent_searches', JSON.stringify(searches));
-    } catch (e) {}
-  };
-
-  const removeRecentSearch = async (query) => {
-    try {
-      const searches = recentSearches.filter(s => s !== query);
-      setRecentSearches(searches);
-      await AsyncStorage.setItem('recent_searches', JSON.stringify(searches));
-    } catch (e) {}
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refreshMarket();
-    if (activeTab === 'Users') {
-      try {
-        const res = await api.get(`profiles/?search=${searchQuery}`);
-        setUserResults(res.data.results || res.data);
-      } catch (err) {}
-    }
-    setRefreshing(false);
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshMarket();
-    }, [])
-  );
-
-  // Debounced user search
-  useEffect(() => {
-    if (activeTab === 'Users') {
-      const searchUsers = async () => {
-        setLoadingUsers(true);
-        try {
-          const res = await api.get(`profiles/?search=${searchQuery}`);
-          setUserResults(res.data.results || res.data);
-        } catch (err) {
-          console.error('User Search Error:', err.message);
-        } finally {
-          setLoadingUsers(false);
+// Compute Levenshtein distance for spell-check suggestions.
+// Pure function — defined at module level so it is not re-created on each render.
+const levenshteinDistance = (a, b) => {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+    for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
         }
-      };
-      const timeoutId = setTimeout(searchUsers, 300);
-      return () => clearTimeout(timeoutId);
     }
-  }, [searchQuery, activeTab]);
-
-  const filteredItems = items.filter(item => {
-    // Only show items that are NOT sold
-    if (item.is_sold) return false;
-    
-    const matchesCategory = !selectedCategory || item.category === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
-                         
-    // DIPLOMA FYP COMMENT:
-    // Filtering listings client-side by location for optimal responsiveness.
-    // If the user selected a location (e.g. Kuala Lumpur), we check if the item's
-    // seller_location field matches the selection.
-    const matchesLocation = selectedLocation === 'All' || 
-                           (item.seller_location && item.seller_location.toLowerCase().includes(selectedLocation.toLowerCase()));
-    
-    const matchesMinPrice = !minPrice || parseFloat(item.price) >= parseFloat(minPrice);
-    const matchesMaxPrice = !maxPrice || parseFloat(item.price) <= parseFloat(maxPrice);
-                           
-    return matchesCategory && matchesSearch && matchesLocation && matchesMinPrice && matchesMaxPrice;
-  });
-
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    if (sortBy === 'price_asc') {
-      const priceA = parseFloat(a.price) || 0;
-      const priceB = parseFloat(b.price) || 0;
-      return priceA - priceB;
-    }
-    if (sortBy === 'price_desc') {
-      const priceA = parseFloat(a.price) || 0;
-      const priceB = parseFloat(b.price) || 0;
-      return priceB - priceA;
-    }
-    if (sortBy === 'trusted_seller') {
-      const scoreA = parseFloat(a.seller_trust_score) || (a.seller && a.seller.trust_score) || 0;
-      const scoreB = parseFloat(b.seller_trust_score) || (b.seller && b.seller.trust_score) || 0;
-      return scoreB - scoreA;
-    }
-    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-    // Fallback to 0 if the date string is invalid (e.g. optimistic update)
-    return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
-  });
-
-  const renderUserItem = ({ item }) => {
-    const isHighlyTrusted = item.trust_score >= 80;
-    return (
-      <TouchableOpacity
-        style={styles.userCard}
-        onPress={() => navigation.navigate('UserProfile', { userId: item.user || item.id })}
-      >
-        <View>
-          <View style={styles.userAvatar}>
-            <Text style={styles.userInitial}>{item.username?.[0]?.toUpperCase()}</Text>
-          </View>
-          {/* Note: Misleading green 'online' activeDot removed as there is no real-time presence system */}
-        </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.usernameText}>{item.username}</Text>
-          <View style={styles.userMeta}>
-            <Ionicons name="shield-checkmark" size={12} color={COLORS.primary} />
-            <Text style={styles.trustScoreText}>Trust Score: {item.trust_score}%</Text>
-            {isHighlyTrusted && (
-              <View style={styles.trustedBadge}>
-                <Text style={styles.trustedBadgeText}>Trusted</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
-      </TouchableOpacity>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <LinearGradient
-        colors={[COLORS.primary, '#00421e']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.greeting}>{(() => {
-              const hr = new Date().getHours();
-              if (hr < 12) return 'Good morning';
-              if (hr < 17) return 'Good afternoon';
-              if (hr < 22) return 'Good evening';
-              return 'Happy night hunting';
-            })()},</Text>
-            <Text style={styles.logoText}>MyPreLove</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity style={[styles.iconCircle, { marginRight: 8, backgroundColor: '#D1FAE5' }]} onPress={handleOpenEcoLeaderboard}>
-              <Ionicons name="leaf" size={20} color="#10B981"/>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconCircle} onPress={() => navigation.navigate('For You')}>
-              <Ionicons name="person-outline" size={20} color={COLORS.primary}/>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color={COLORS.gray} style={styles.searchIcon} />
-            <TextInput 
-              style={styles.searchInput} 
-              placeholder={activeTab === 'Items' ? "Search items..." : "Search usernames..."} 
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor={COLORS.gray}
-              onSubmitEditing={() => saveSearchQuery(searchQuery)}
-              returnKeyType="search"
-            />
-          </View>
-        </View>
-      </LinearGradient>
-
-      <View style={styles.tabToggle}>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, activeTab === 'Items' && styles.activeToggle]}
-          onPress={() => {setActiveTab('Items'); setSearchQuery('');}}
-        >
-          <Text style={[styles.toggleText, activeTab === 'Items' && styles.activeToggleText]}>Items</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, activeTab === 'Users' && styles.activeToggle]}
-          onPress={() => {setActiveTab('Users'); setSearchQuery('');}}
-        >
-          <Text style={[styles.toggleText, activeTab === 'Users' && styles.activeToggleText]}>Sellers</Text>
-        </TouchableOpacity>
-
-        {activeTab === 'Items' && (
-          <TouchableOpacity 
-            style={[styles.toggleBtn, (selectedLocation !== 'All' || minPrice || maxPrice) && styles.activeToggle, { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center' }]}
-            onPress={() => setShowLocationModal(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="funnel-outline" size={14} color={(selectedLocation !== 'All' || minPrice || maxPrice) ? 'white' : COLORS.gray} style={{ marginRight: 4 }} />
-            <Text style={[styles.toggleText, (selectedLocation !== 'All' || minPrice || maxPrice) && styles.activeToggleText]}>
-              {(selectedLocation !== 'All' || minPrice || maxPrice) ? 'Filters Active' : 'Filters'}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Recent Searches Row */}
-      {recentSearches.length > 0 && !searchQuery && (
-        <View style={styles.recentSearchesContainer}>
-          <Text style={styles.recentTitle}>Recent:</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
-            {recentSearches.map((s, idx) => (
-              <View key={idx} style={styles.recentChip}>
-                <TouchableOpacity onPress={() => setSearchQuery(s)} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="time-outline" size={12} color={COLORS.gray} style={{ marginRight: 4 }} />
-                  <Text style={styles.recentChipText}>{s}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => removeRecentSearch(s)} style={{ marginLeft: 6, paddingHorizontal: 2 }}>
-                  <Ionicons name="close" size={14} color={COLORS.gray} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {activeTab === 'Items' ? (
-        <>
-          <View style={styles.categoryContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
-              <CategoryChip 
-                name="All" 
-                active={selectedCategory === null} 
-                onPress={() => setSelectedCategory(null)} 
-              />
-              {categories.map(cat => (
-                <CategoryChip 
-                  key={cat.id} 
-                  name={cat.name}
-                  icon={cat.icon_name}
-                  active={selectedCategory === cat.id} 
-                  onPress={() => setSelectedCategory(cat.id)} 
-                />
-              ))}
-            </ScrollView>
-          </View>
-
-          <View style={styles.sortContainer}>
-            <Text style={styles.sortTitle}>Sort:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortList}>
-              <TouchableOpacity 
-                style={[styles.sortChip, sortBy === 'newest' && styles.activeSortChip]}
-                onPress={() => setSortBy('newest')}
-              >
-                <Text style={[styles.sortChipText, sortBy === 'newest' && styles.activeSortChipText]}>Newest</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.sortChip, sortBy === 'price_asc' && styles.activeSortChip]}
-                onPress={() => setSortBy('price_asc')}
-              >
-                <Text style={[styles.sortChipText, sortBy === 'price_asc' && styles.activeSortChipText]}>Price: Low - High</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.sortChip, sortBy === 'price_desc' && styles.activeSortChip]}
-                onPress={() => setSortBy('price_desc')}
-              >
-                <Text style={[styles.sortChipText, sortBy === 'price_desc' && styles.activeSortChipText]}>Price: High - Low</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.sortChip, sortBy === 'trusted_seller' && styles.activeSortChip]}
-                onPress={() => setSortBy('trusted_seller')}
-              >
-                <Text style={[styles.sortChipText, sortBy === 'trusted_seller' && styles.activeSortChipText]}>Trusted Seller</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-
-          {loadingItems ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 15 }}>
-              <FeedCardSkeleton />
-              <FeedCardSkeleton />
-              <FeedCardSkeleton />
-              <FeedCardSkeleton />
-              <FeedCardSkeleton />
-              <FeedCardSkeleton />
-            </View>
-          ) : (
-            <FlatList
-              data={sortedItems}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
-              }
-              renderItem={({ item }) => (
-                <ItemCard 
-                  item={item} 
-                  onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })} 
-                  onToggleFavorite={toggleFavorite}
-                  isFavorite={favorites.includes(item.id)}
-                />
-              )}
-              keyExtractor={item => item.id.toString()}
-              numColumns={2}
-              columnWrapperStyle={styles.columnWrapper}
-              contentContainerStyle={styles.itemList}
-              initialNumToRender={6}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              removeClippedSubviews={true}
-              ListHeaderComponent={
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>
-                    {searchQuery ? `Search results for "${searchQuery}"` : 'Curated For You'}
-                  </Text>
-                  <Text style={styles.sectionSubtitle}>{sortedItems.length} items found</Text>
-                </View>
-              }
-              ListEmptyComponent={
-                <EmptyState 
-                  icon="search-outline"
-                  title="No Listings Found"
-                  description="We couldn't find any items matching your filters or search query. Try resetting your search."
-                  actionText="Clear All Filters"
-                  onActionPress={() => {
-                    setSearchQuery('');
-                    setSelectedCategory(null);
-                    setSelectedLocation('All');
-                  }}
-                />
-              }
-            />
-          )}
-        </>
-      ) : (
-        <View style={{ flex: 1 }}>
-          {loadingUsers ? (
-            <View style={{ paddingHorizontal: 20 }}>
-              <SellerRowSkeleton />
-              <SellerRowSkeleton />
-              <SellerRowSkeleton />
-              <SellerRowSkeleton />
-            </View>
-          ) : (
-            <FlatList
-              data={userResults}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
-              }
-              renderItem={renderUserItem}
-              keyExtractor={item => item.id.toString()}
-              contentContainerStyle={styles.userList}
-              ListHeaderComponent={
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Marketplace Community</Text>
-                  <Text style={styles.sectionSubtitle}>{userResults.length} members found</Text>
-                </View>
-              }
-              ListEmptyComponent={
-                <EmptyState 
-                  icon="people-outline"
-                  title="All Quiet in the Community"
-                  description="No sellers match your search query. Try checking again with a different name."
-                  actionText="Clear Search"
-                  onActionPress={() => setSearchQuery('')}
-                />
-              }
-            />
-          )}
-        </View>
-      )}
-
-      <Modal
-        visible={showLocationModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowLocationModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.locationModalContent}>
-            <View style={styles.locationModalHeader}>
-              <Text style={styles.locationModalTitle}>Search Filters</Text>
-              <TouchableOpacity onPress={() => setShowLocationModal(false)} style={styles.locationModalCloseBtn}>
-                <Ionicons name="close" size={22} color={COLORS.black} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.locationListScroll} showsVerticalScrollIndicator={false}>
-              <Text style={styles.filterSectionTitle}>Location</Text>
-              <View style={styles.locationGrid}>
-                {locations.map((loc) => {
-                  const isSelected = tempLocation === loc;
-                  return (
-                    <TouchableOpacity
-                      key={loc}
-                      style={[styles.locationChip, isSelected && styles.locationChipSelected]}
-                      onPress={() => setTempLocation(loc)}
-                    >
-                      <Text style={[styles.locationChipText, isSelected && styles.locationChipTextSelected]}>
-                        {loc}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.filterSectionTitle}>Price Range (RM)</Text>
-              <View style={styles.priceInputRow}>
-                <TextInput
-                  style={styles.filterPriceInput}
-                  placeholder="Min"
-                  placeholderTextColor={COLORS.gray}
-                  keyboardType="numeric"
-                  value={minPriceInput}
-                  onChangeText={setMinPriceInput}
-                />
-                <Text style={{ marginHorizontal: 10, color: COLORS.black }}>to</Text>
-                <TextInput
-                  style={styles.filterPriceInput}
-                  placeholder="Max"
-                  placeholderTextColor={COLORS.gray}
-                  keyboardType="numeric"
-                  value={maxPriceInput}
-                  onChangeText={setMaxPriceInput}
-                />
-              </View>
-            </ScrollView>
-
-            <View style={styles.filterActions}>
-              <TouchableOpacity style={styles.filterResetBtn} onPress={handleResetFilters}>
-                <Text style={styles.filterResetBtnText}>Reset All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.filterApplyBtn} onPress={handleApplyFilters}>
-                <Text style={styles.filterApplyBtnText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showEcoLeaderboard}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowEcoLeaderboard(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.leaderboardModalContent}>
-            <View style={styles.leaderboardHeader}>
-              <Ionicons name="leaf" size={22} color="#10B981" style={{ marginRight: 6 }} />
-              <Text style={styles.leaderboardTitle}>CO₂ Eco Contributors</Text>
-              <TouchableOpacity onPress={() => setShowEcoLeaderboard(false)} style={{ marginLeft: 'auto' }}>
-                <Ionicons name="close" size={24} color={COLORS.black} />
-              </TouchableOpacity>
-            </View>
-
-            {loadingEco ? (
-              <ActivityIndicator color="#10B981" style={{ marginVertical: 40 }} />
-            ) : (
-              <ScrollView style={{ marginTop: 15 }} showsVerticalScrollIndicator={false}>
-                {ecoLeaderboardData.map((user, index) => {
-                  const isTop3 = index < 3;
-                  const medalColors = ['#FBBF24', '#94A3B8', '#D97706']; // Gold, Silver, Bronze
-                  return (
-                    <View key={user.user_id || index} style={styles.leaderboardRow}>
-                      <View style={styles.rankBadge}>
-                        {isTop3 ? (
-                          <Ionicons name="trophy" size={16} color={medalColors[index]} />
-                        ) : (
-                          <Text style={styles.rankText}>{index + 1}</Text>
-                        )}
-                      </View>
-                      <View style={styles.leaderboardUserInfo}>
-                        <Text style={styles.leaderboardUsername}>{user.username}</Text>
-                        <Text style={styles.leaderboardTrust}>Trust: {user.trust_score}%</Text>
-                      </View>
-                      <View style={styles.leaderboardImpact}>
-                        <Text style={styles.leaderboardCO2}>{user.total_eco_saved?.toFixed(1) || '0'} kg</Text>
-                        <Text style={styles.leaderboardImpactSub}>CO₂ Saved</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
+    return matrix[b.length][a.length];
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 52 : 44, paddingBottom: 16, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  greeting: { 
-    fontSize: 11, 
-    color: 'rgba(255, 255, 255, 0.75)', 
-    letterSpacing: 1.5, 
-    textTransform: 'uppercase',
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-SemiBold'
-  },
-  logoText: { 
-    fontSize: 28, 
-    color: '#FFFFFF', 
-    marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'PlayfairDisplay-Bold'
-  },
-  iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.95)', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
-  searchContainer: { marginBottom: 0 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, borderRadius: 22, paddingHorizontal: 15, height: 44, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  searchIcon: { marginRight: 10 },
-  searchInput: { 
-    flex: 1, 
-    fontSize: 16, 
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Regular'
-  },
-  tabToggle: { flexDirection: 'row', backgroundColor: COLORS.background, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 10 },
-  toggleBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16, marginRight: 10, backgroundColor: COLORS.lightGray },
-  activeToggle: { backgroundColor: COLORS.primary },
-  toggleText: { 
-    fontSize: 13, 
-    color: COLORS.gray,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Bold'
-  },
-  activeToggleText: { color: 'white' },
-  categoryContainer: { paddingVertical: 15, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.lightGray },
-  categoryList: { paddingHorizontal: 20 },
-  sectionHeader: { paddingHorizontal: 20, marginTop: 25, marginBottom: 15 },
-  sectionHeaderTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  sectionTitle: { 
-    fontSize: 20, 
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'PlayfairDisplay-SemiBold'
-  },
-  sectionSubtitle: { 
-    fontSize: 13, 
-    color: COLORS.gray, 
-    marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Regular'
-  },
-  filterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.lightGray, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: COLORS.gray + '20' },
-  activeFilterChip: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  filterChipText: { 
-    fontSize: 12, 
-    color: COLORS.primary, 
-    marginLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-SemiBold'
-  },
-  activeFilterChipText: { color: 'white' },
-  itemList: { paddingBottom: 100 },
-  columnWrapper: { justifyContent: 'space-between', paddingHorizontal: 20 },
-  userList: { paddingBottom: 100 },
-  userCard: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: COLORS.white, marginHorizontal: 20, marginBottom: 12, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  userAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
-  userInitial: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-  userInfo: { flex: 1, marginLeft: 15 },
-  usernameText: { 
-    fontSize: 16, 
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Bold'
-  },
-  userMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  trustScoreText: { 
-    fontSize: 12, 
-    color: COLORS.primary, 
-    marginLeft: 5, 
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-SemiBold'
-  },
-  emptyContainer: { alignItems: 'center', marginTop: 80, paddingHorizontal: 40 },
-  emptyText: { color: COLORS.gray, marginTop: 15, fontSize: 16, textAlign: 'center', fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'PlusJakartaSans-Regular' },
-  activeDot: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#10B981',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  trustedBadge: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-    marginLeft: 6,
-  },
-  trustedBadgeText: {
-    color: '#0369A1',
-    fontSize: 9,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  locationModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    width: '90%',
-    maxHeight: '80%',
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  locationModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  locationModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  locationModalCloseBtn: {
-    padding: 4,
-  },
-  locationListScroll: {
-    marginTop: 10,
-  },
-  locationGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-  },
-  locationChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: '#F8FAFC',
-  },
-  locationChipSelected: {
-    backgroundColor: '#064E3B15',
-    borderColor: '#064E3B',
-  },
-  locationChipText: {
-    fontSize: 13,
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  locationChipTextSelected: {
-    color: '#064E3B',
-    fontWeight: 'bold',
-  },
-  filterSectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    marginTop: 16,
-    marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  priceInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 10,
-  },
-  filterPriceInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: COLORS.black,
-    backgroundColor: '#F8FAFC',
-  },
-  filterActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.lightGray,
-    paddingTop: 16,
-    marginTop: 16,
-  },
-  filterResetBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  filterResetBtnText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.gray,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  filterApplyBtn: {
-    flex: 2,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#064E3B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterApplyBtnText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  leaderboardModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    width: '90%',
-    maxHeight: '75%',
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  leaderboardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-    paddingBottom: 12,
-  },
-  leaderboardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  leaderboardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  rankBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  rankText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.gray,
-  },
-  leaderboardUserInfo: {
-    flex: 1,
-  },
-  leaderboardUsername: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  leaderboardTrust: {
-    fontSize: 11,
-    color: COLORS.gray,
-    marginTop: 2,
-  },
-  leaderboardImpact: {
-    alignItems: 'flex-end',
-  },
-  leaderboardCO2: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#10B981',
-  },
-  leaderboardImpactSub: {
-    fontSize: 10,
-    color: COLORS.gray,
-  },
-  recentSearchesContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  recentTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: COLORS.gray,
-    marginRight: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  recentList: {
-    alignItems: 'center',
-    paddingRight: 20,
-  },
-  recentChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightGray,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    marginRight: 8,
-  },
-  recentChipText: {
-    fontSize: 12,
-    color: COLORS.black,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  sortContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  sortTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: COLORS.gray,
-    marginRight: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  sortList: {
-    alignItems: 'center',
-    paddingRight: 20,
-  },
-  sortChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 15,
-    marginRight: 8,
-    backgroundColor: COLORS.lightGray,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  activeSortChip: {
-    backgroundColor: COLORS.primary + '10',
-    borderColor: COLORS.primary + '30',
-  },
-  sortChipText: {
-    fontSize: 12,
-    color: COLORS.gray,
-    fontFamily: Platform.OS === 'ios' ? 'Plus Jakarta Sans' : 'sans-serif',
-  },
-  activeSortChipText: {
-    color: COLORS.primary,
-    fontWeight: 'bold',
-  },
-});
+export const ExploreScreen = ({ navigation }) => {
+    const { items, categories, favorites, refreshMarket, toggleFavorite, loading: loadingItems } = useMarket();
+
+    const [activeTab, setActiveTab]               = useState('Items');
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [searchQuery, setSearchQuery]           = useState('');
+    const [searchSuggestion, setSearchSuggestion] = useState('');
+
+    // Filter modal state — temp values are only committed on "Apply"
+    const [showLocationModal, setShowLocationModal] = useState(false);
+    const [selectedLocation, setSelectedLocation]   = useState('All');
+    const [minPrice, setMinPrice]                   = useState('');
+    const [maxPrice, setMaxPrice]                   = useState('');
+    const [tempLocation, setTempLocation]           = useState('All');
+    const [minPriceInput, setMinPriceInput]         = useState('');
+    const [maxPriceInput, setMaxPriceInput]         = useState('');
+
+    const [userResults, setUserResults]           = useState([]);
+    const [loadingUsers, setLoadingUsers]         = useState(false);
+    const [refreshing, setRefreshing]             = useState(false);
+    const [recentSearches, setRecentSearches]     = useState([]);
+    const [sortBy, setSortBy]                     = useState('newest');
+    const [showEcoLeaderboard, setShowEcoLeaderboard] = useState(false);
+    const [ecoLeaderboardData, setEcoLeaderboardData] = useState([]);
+    const [loadingEco, setLoadingEco]             = useState(false);
+
+    // Retrieve locally saved search history from storage to pre-populate recent search chips.
+    const loadRecentSearches = useCallback(async () => {
+        try {
+            const stored = await AsyncStorage.getItem('recent_searches');
+            if (stored) setRecentSearches(JSON.parse(stored));
+        } catch {}
+    }, []);
+
+    useEffect(() => {
+        loadRecentSearches();
+    }, [loadRecentSearches]);
+
+    // Sync temp filter values when the filter modal opens.
+    useEffect(() => {
+        if (showLocationModal) {
+            setTempLocation(selectedLocation);
+            setMinPriceInput(minPrice);
+            setMaxPriceInput(maxPrice);
+        }
+    }, [showLocationModal]);
+
+    const handleApplyFilters = useCallback(() => {
+        setSelectedLocation(tempLocation);
+        setMinPrice(minPriceInput);
+        setMaxPrice(maxPriceInput);
+        setShowLocationModal(false);
+    }, [tempLocation, minPriceInput, maxPriceInput]);
+
+    const handleResetFilters = useCallback(() => {
+        setTempLocation('All');
+        setMinPriceInput('');
+        setMaxPriceInput('');
+        setSelectedLocation('All');
+        setMinPrice('');
+        setMaxPrice('');
+        setShowLocationModal(false);
+    }, []);
+
+    // Fetch the eco leaderboard metrics to show users sorted by carbon savings.
+    const handleOpenEcoLeaderboard = useCallback(async () => {
+        setShowEcoLeaderboard(true);
+        setLoadingEco(true);
+        try {
+            const res = await api.get('profiles/eco_leaderboard/');
+            setEcoLeaderboardData(res.data);
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Could not load ECO Leaderboard.');
+        } finally {
+            setLoadingEco(false);
+        }
+    }, []);
+
+    const saveSearchQuery = useCallback(async (query) => {
+        if (!query || !query.trim()) return;
+        const trimmed = query.trim();
+        try {
+            const updated = [trimmed, ...recentSearches.filter(s => s !== trimmed)].slice(0, MAX_RECENT_SEARCHES);
+            setRecentSearches(updated);
+            await AsyncStorage.setItem('recent_searches', JSON.stringify(updated));
+        } catch {}
+    }, [recentSearches]);
+
+    const removeRecentSearch = useCallback(async (query) => {
+        try {
+            const updated = recentSearches.filter(s => s !== query);
+            setRecentSearches(updated);
+            await AsyncStorage.setItem('recent_searches', JSON.stringify(updated));
+        } catch {}
+    }, [recentSearches]);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshMarket();
+        if (activeTab === 'Users') {
+            try {
+                const res = await api.get(`profiles/?search=${searchQuery}`);
+                setUserResults(res.data.results || res.data);
+            } catch {}
+        }
+        setRefreshing(false);
+    }, [activeTab, searchQuery, refreshMarket]);
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshMarket();
+        }, [refreshMarket])
+    );
+
+    // Perform a debounced seller lookup to avoid triggering redundant API requests on fast typists.
+    useEffect(() => {
+        if (activeTab !== 'Users') return;
+        const searchUsers = async () => {
+            setLoadingUsers(true);
+            try {
+                const res = await api.get(`profiles/?search=${searchQuery}`);
+                setUserResults(res.data.results || res.data);
+            } catch (err) {
+                console.error('User Search Error:', err.message);
+            } finally {
+                setLoadingUsers(false);
+            }
+        };
+        const timeoutId = setTimeout(searchUsers, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, activeTab]);
+
+    const favoritesSet = useMemo(() => new Set(favorites), [favorites]);
+
+    // Greeting derived at render time — stable enough as a non-memoised expression.
+    const greeting = (() => {
+        const hr = new Date().getHours();
+        if (hr < 12) return 'Good morning';
+        if (hr < 17) return 'Good afternoon';
+        if (hr < 22) return 'Good evening';
+        return 'Happy night hunting';
+    })();
+
+    // Filter and sort the marketplace listings based on query, price bounds, location, and sort order.
+    const sortedItems = useMemo(() => {
+        const filtered = items.filter(item => {
+            if (item.is_sold) return false;
+            const matchesCategory = !selectedCategory || item.category === selectedCategory;
+            const lowerQuery = searchQuery.toLowerCase();
+            const matchesSearch =
+                item.name.toLowerCase().includes(lowerQuery) ||
+                item.description.toLowerCase().includes(lowerQuery);
+            const matchesLocation =
+                selectedLocation === 'All' ||
+                (item.seller_location &&
+                    item.seller_location.toLowerCase().includes(selectedLocation.toLowerCase()));
+            const matchesMinPrice = !minPrice || parseFloat(item.price) >= parseFloat(minPrice);
+            const matchesMaxPrice = !maxPrice || parseFloat(item.price) <= parseFloat(maxPrice);
+            return matchesCategory && matchesSearch && matchesLocation && matchesMinPrice && matchesMaxPrice;
+        });
+
+        return filtered.sort((a, b) => {
+            if (sortBy === 'price_asc')  return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+            if (sortBy === 'price_desc') return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
+            if (sortBy === 'trusted_seller') {
+                const scoreA = parseFloat(a.seller_trust_score) || (a.seller && a.seller.trust_score) || 0;
+                const scoreB = parseFloat(b.seller_trust_score) || (b.seller && b.seller.trust_score) || 0;
+                return scoreB - scoreA;
+            }
+            // Default: newest first
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
+        });
+    }, [items, selectedCategory, searchQuery, selectedLocation, minPrice, maxPrice, sortBy]);
+
+    // Derive "did you mean" suggestion from the Levenshtein algorithm.
+    useEffect(() => {
+        if (sortedItems.length === 0 && searchQuery.trim().length > 0) {
+            let bestMatch = null;
+            let minDistance = Infinity;
+            items.filter(item => !item.is_sold).forEach(item => {
+                item.name.toLowerCase().split(' ').forEach(word => {
+                    const dist = levenshteinDistance(searchQuery.toLowerCase().trim(), word);
+                    if (dist <= 2 && dist < minDistance) {
+                        minDistance = dist;
+                        bestMatch = item.name;
+                    }
+                });
+            });
+            setSearchSuggestion(bestMatch ? `Did you mean: ${bestMatch}?` : '');
+        } else {
+            setSearchSuggestion('');
+        }
+    }, [sortedItems, searchQuery, items]);
+
+    // Stable renderItem callbacks so FlatList doesn't re-render every row on parent updates.
+    const renderItemCard = useCallback(({ item }) => (
+        <ItemCard
+            item={item}
+            onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })}
+            onToggleFavorite={toggleFavorite}
+            isFavorite={favoritesSet.has(item.id)}
+        />
+    ), [favoritesSet, navigation, toggleFavorite]);
+
+    const keyExtractorItem = useCallback(item => item.id.toString(), []);
+    const keyExtractorUser = useCallback(item => item.id.toString(), []);
+
+    // Stable tab-switch handlers.
+    const switchToItems = useCallback(() => { setActiveTab('Items'); setSearchQuery(''); }, []);
+    const switchToUsers = useCallback(() => { setActiveTab('Users'); setSearchQuery(''); }, []);
+    const openFilterModal = useCallback(() => setShowLocationModal(true), []);
+    const closeFilterModal = useCallback(() => setShowLocationModal(false), []);
+    const closeEcoModal = useCallback(() => setShowEcoLeaderboard(false), []);
+    const navigateForYou = useCallback(() => navigation.navigate('For You'), [navigation]);
+
+    const handleSuggestionPress = useCallback(() => {
+        setSearchQuery(searchSuggestion.replace('Did you mean: ', '').replace('?', ''));
+    }, [searchSuggestion]);
+
+    const clearAllFilters = useCallback(() => {
+        setSearchQuery('');
+        setSelectedCategory(null);
+        setSelectedLocation('All');
+    }, []);
+
+    const clearSearch = useCallback(() => setSearchQuery(''), []);
+
+    const handleSearchSubmit = useCallback(() => saveSearchQuery(searchQuery), [saveSearchQuery, searchQuery]);
+
+    // Memoised user card render function — avoids inline arrow in FlatList.
+    const renderUserItem = useCallback(({ item }) => {
+        const isHighlyTrusted = item.trust_score >= 80;
+        return (
+            <TouchableOpacity
+                style={styles.userCard}
+                onPress={() => navigation.navigate('UserProfile', { userId: item.user || item.id })}
+            >
+                <View>
+                    <View style={styles.userAvatar}>
+                        <Text style={styles.userInitial}>{item.username?.[0]?.toUpperCase()}</Text>
+                    </View>
+                </View>
+                <View style={styles.userInfo}>
+                    <Text style={styles.usernameText}>{item.username}</Text>
+                    <View style={styles.userMeta}>
+                        <Ionicons name="shield-checkmark" size={12} color={COLORS.primary} />
+                        <Text style={styles.trustScoreText}>Trust Score: {item.trust_score}%</Text>
+                        {isHighlyTrusted && (
+                            <View style={styles.trustedBadge}>
+                                <Text style={styles.trustedBadgeText}>Trusted</Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+        );
+    }, [navigation]);
+
+    // Derived boolean — whether any filter is active.
+    const isFilterActive = selectedLocation !== 'All' || !!minPrice || !!maxPrice;
+
+    // Memoised ListHeaderComponent so FlatList doesn't recreate it on every render.
+    const ItemsListHeader = useMemo(() => (
+        <View>
+            <View style={styles.sortContainer}>
+                <Text style={styles.sortTitle}>Sort:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortList}>
+                    {[
+                        { key: 'newest',       label: 'Newest' },
+                        { key: 'price_asc',    label: 'Price: Low - High' },
+                        { key: 'price_desc',   label: 'Price: High - Low' },
+                        { key: 'trusted_seller', label: 'Trusted Seller' },
+                    ].map(({ key, label }) => (
+                        <TouchableOpacity
+                            key={key}
+                            style={[styles.sortChip, sortBy === key && styles.activeSortChip]}
+                            onPress={() => setSortBy(key)}
+                        >
+                            <Text style={[styles.sortChipText, sortBy === key && styles.activeSortChipText]}>
+                                {label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                    {searchQuery ? `Search results for "${searchQuery}"` : 'Curated For You'}
+                </Text>
+                <Text style={styles.sectionSubtitle}>{sortedItems.length} items found</Text>
+            </View>
+            {searchSuggestion ? (
+                <TouchableOpacity onPress={handleSuggestionPress} style={styles.suggestionRow}>
+                    <Text style={styles.suggestionText}>{searchSuggestion}</Text>
+                </TouchableOpacity>
+            ) : null}
+        </View>
+    ), [sortBy, searchQuery, sortedItems.length, searchSuggestion, handleSuggestionPress]);
+
+    const UsersListHeader = useMemo(() => (
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Marketplace Community</Text>
+            <Text style={styles.sectionSubtitle}>{userResults.length} members found</Text>
+        </View>
+    ), [userResults.length]);
+
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" />
+            <LinearGradient
+                colors={HEADER_GRADIENT}
+                start={HEADER_GRADIENT_START}
+                end={HEADER_GRADIENT_END}
+                style={styles.header}
+            >
+                <View style={styles.headerTop}>
+                    <View>
+                        <Text style={styles.greeting}>{greeting},</Text>
+                        <Text style={styles.logoText}>MyPreLove</Text>
+                    </View>
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity
+                            style={[styles.iconCircle, styles.ecoIconCircle]}
+                            onPress={handleOpenEcoLeaderboard}
+                        >
+                            <Ionicons name="leaf" size={20} color="#10B981" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconCircle} onPress={navigateForYou}>
+                            <Ionicons name="person-outline" size={20} color={COLORS.primary} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.searchContainer}>
+                    <View style={styles.searchBar}>
+                        <Ionicons name="search" size={20} color={COLORS.gray} style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder={activeTab === 'Items' ? 'Search items...' : 'Search usernames...'}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            placeholderTextColor={COLORS.gray}
+                            onSubmitEditing={handleSearchSubmit}
+                            returnKeyType="search"
+                        />
+                    </View>
+                </View>
+            </LinearGradient>
+
+            <View style={styles.tabToggle}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, activeTab === 'Items' && styles.activeToggle]}
+                    onPress={switchToItems}
+                >
+                    <Text style={[styles.toggleText, activeTab === 'Items' && styles.activeToggleText]}>Items</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, activeTab === 'Users' && styles.activeToggle]}
+                    onPress={switchToUsers}
+                >
+                    <Text style={[styles.toggleText, activeTab === 'Users' && styles.activeToggleText]}>Sellers</Text>
+                </TouchableOpacity>
+
+                {activeTab === 'Items' && (
+                    <TouchableOpacity
+                        style={[styles.toggleBtn, isFilterActive && styles.activeToggle, styles.filterToggleBtn]}
+                        onPress={openFilterModal}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons
+                            name="funnel-outline"
+                            size={14}
+                            color={isFilterActive ? 'white' : COLORS.gray}
+                            style={styles.filterIcon}
+                        />
+                        <Text style={[styles.toggleText, isFilterActive && styles.activeToggleText]}>
+                            {isFilterActive ? 'Filters Active' : 'Filters'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            {/* Recent search chips — only shown when search is empty */}
+            {recentSearches.length > 0 && !searchQuery && (
+                <View style={styles.recentSearchesContainer}>
+                    <Text style={styles.recentTitle}>Recent:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
+                        {recentSearches.map((s, idx) => (
+                            <View key={idx} style={styles.recentChip}>
+                                <TouchableOpacity onPress={() => setSearchQuery(s)} style={styles.recentChipInner}>
+                                    <Ionicons name="time-outline" size={12} color={COLORS.gray} style={styles.recentChipIcon} />
+                                    <Text style={styles.recentChipText}>{s}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => removeRecentSearch(s)} style={styles.recentChipRemove}>
+                                    <Ionicons name="close" size={14} color={COLORS.gray} />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
+
+            {activeTab === 'Items' ? (
+                <>
+                    <View style={styles.categoryContainer}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
+                            <CategoryChip
+                                name="All"
+                                active={selectedCategory === null}
+                                onPress={() => setSelectedCategory(null)}
+                            />
+                            {categories.map(cat => (
+                                <CategoryChip
+                                    key={cat.id}
+                                    name={cat.name}
+                                    icon={cat.icon_name}
+                                    active={selectedCategory === cat.id}
+                                    onPress={() => setSelectedCategory(cat.id)}
+                                />
+                            ))}
+                        </ScrollView>
+                    </View>
+
+                    {loadingItems ? (
+                        <View style={styles.skeletonGrid}>
+                            <FeedCardSkeleton />
+                            <FeedCardSkeleton />
+                            <FeedCardSkeleton />
+                            <FeedCardSkeleton />
+                            <FeedCardSkeleton />
+                            <FeedCardSkeleton />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={sortedItems}
+                            refreshControl={
+                                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+                            }
+                            renderItem={renderItemCard}
+                            keyExtractor={keyExtractorItem}
+                            numColumns={2}
+                            columnWrapperStyle={styles.columnWrapper}
+                            contentContainerStyle={styles.itemList}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="on-drag"
+                            initialNumToRender={6}
+                            maxToRenderPerBatch={10}
+                            windowSize={5}
+                            removeClippedSubviews={true}
+                            getItemLayout={(_, index) => ({
+                                length: 275,
+                                offset: 275 * Math.floor(index / 2),
+                                index,
+                            })}
+                            ListHeaderComponent={ItemsListHeader}
+                            ListEmptyComponent={
+                                <EmptyState
+                                    icon="search-outline"
+                                    title="No Listings Found"
+                                    description="We couldn't find any items matching your filters or search query. Try resetting your search."
+                                    actionText="Clear All Filters"
+                                    onActionPress={clearAllFilters}
+                                />
+                            }
+                        />
+                    )}
+                </>
+            ) : (
+                <View style={styles.usersTabContainer}>
+                    {loadingUsers ? (
+                        <View style={styles.skeletonList}>
+                            <SellerRowSkeleton />
+                            <SellerRowSkeleton />
+                            <SellerRowSkeleton />
+                            <SellerRowSkeleton />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={userResults}
+                            refreshControl={
+                                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+                            }
+                            renderItem={renderUserItem}
+                            keyExtractor={keyExtractorUser}
+                            contentContainerStyle={styles.userList}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="on-drag"
+                            ListHeaderComponent={UsersListHeader}
+                            ListEmptyComponent={
+                                <EmptyState
+                                    icon="people-outline"
+                                    title="All Quiet in the Community"
+                                    description="No sellers match your search query. Try checking again with a different name."
+                                    actionText="Clear Search"
+                                    onActionPress={clearSearch}
+                                />
+                            }
+                        />
+                    )}
+                </View>
+            )}
+
+            <FilterModal
+                visible={showLocationModal}
+                onClose={closeFilterModal}
+                locations={LOCATIONS}
+                tempLocation={tempLocation}
+                setTempLocation={setTempLocation}
+                minPriceInput={minPriceInput}
+                setMinPriceInput={setMinPriceInput}
+                maxPriceInput={maxPriceInput}
+                setMaxPriceInput={setMaxPriceInput}
+                onReset={handleResetFilters}
+                onApply={handleApplyFilters}
+            />
+
+            <EcoLeaderboardModal
+                visible={showEcoLeaderboard}
+                onClose={closeEcoModal}
+                loadingEco={loadingEco}
+                ecoLeaderboardData={ecoLeaderboardData}
+            />
+        </View>
+    );
+};

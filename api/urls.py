@@ -1,23 +1,27 @@
-# urls.py
-# API route mapping for MyPreLove.
-# This file links URL paths to view logic.
-
+"""
+Configures the URL routing patterns for the API application,
+mapping REST endpoints to their respective ViewSets and API views.
+"""
+from django.conf import settings
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 
-# Import all views
+
 from .views import (
     CategoryViewSet, ProfileViewSet, ItemViewSet,
     TransactionViewSet, MessageViewSet, ScamReportViewSet,
     NotificationViewSet, ReviewViewSet, FavoriteViewSet,
-    UserViewSet, RegisterView, LoginView, ChangePasswordView, SuggestPriceView,
+    UserViewSet, RegisterView, LoginView, LogoutView, ChangePasswordView,
+    PasswordResetDirectView, PasswordResetRequestView, PasswordResetVerifyView, SuggestPriceView,
     BundleViewSet, PriceAlertViewSet, BlockViewSet
 )
 
-# Configure the router for automated URL generation.
+
 router = DefaultRouter()
 
-# Register endpoints.
+
+# Register REST ViewSets with the default router to generate path endpoints automatically
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'profiles', ProfileViewSet, basename='profile')
 router.register(r'users', UserViewSet, basename='user')
@@ -32,15 +36,30 @@ router.register(r'bundles', BundleViewSet, basename='bundle')
 router.register(r'price-alerts', PriceAlertViewSet, basename='price-alert')
 router.register(r'blocks', BlockViewSet, basename='block')
 
+# Configure explicit endpoint mappings for custom API actions and authentication views
 urlpatterns = [
-    # Custom endpoints (must be defined before router to prevent URL clashing)
+
     path('items/suggest_price/', SuggestPriceView.as_view(), name='suggest-price'),
 
-    # Router generated paths.
+
     path('', include(router.urls)),
-    
-    # Custom authentication endpoints.
+
+
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('password-reset/request/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('password-reset/verify/', PasswordResetVerifyView.as_view(), name='password-reset-verify'),
 ]
+
+# Demo-only, username-only password reset bypass — insecure by design (see the
+# view's docstring). Registered ONLY when DEBUG=True, so in any non-debug
+# deployment the route doesn't exist in the URLconf at all: a request to
+# /password-reset/direct/ 404s exactly as if the path were never defined,
+# rather than reaching the view and relying on the view to reject it.
+if settings.DEBUG:
+    urlpatterns.append(
+        path('password-reset/direct/', PasswordResetDirectView.as_view(), name='password-reset-direct'),
+    )

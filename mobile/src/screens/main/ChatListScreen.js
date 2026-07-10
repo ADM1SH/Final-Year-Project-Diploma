@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,8 +7,29 @@ import { COLORS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 
+// Renders a human-readable preview for offer messages instead of the raw
+// "[OFFER:txId:price:status]" string the chat protocol stores internally.
+const formatMessagePreview = (content) => {
+  if (!content || !content.startsWith('[OFFER:')) return content;
+
+  const parts = content.slice(7, -1).split(':');
+  const price = parseFloat(parts[1]);
+  const offerStatus = parts[2];
+
+  const priceLabel = !isNaN(price) ? `RM ${price.toFixed(2)}` : 'an offer';
+  const statusLabel = {
+    PENDING: 'Awaiting response',
+    ACCEPTED: 'Accepted',
+    PAID: 'Paid (escrow)',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Declined',
+  }[offerStatus] || offerStatus;
+
+  return `🏷 Offer: ${priceLabel} · ${statusLabel}`;
+};
+
 export const ChatListScreen = ({ navigation }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,14 +41,11 @@ export const ChatListScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-
-
   const fetchChats = async () => {
     try {
       const res = await api.get('messages/');
       const messages = res.data.results || res.data;
 
-      // Group messages by conversation partner
       const conversations = {};
       messages.forEach(m => {
         const isMeSender = m.sender_name === user?.username;
@@ -39,7 +57,7 @@ export const ChatListScreen = ({ navigation }) => {
             id: m.id,
             partnerId: partnerId,
             name: partnerName,
-            message: m.content,
+            message: formatMessagePreview(m.content),
             time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             unread: m.is_read ? 0 : (m.receiver_name === user?.username ? 1 : 0),
             timestamp: m.timestamp
@@ -55,7 +73,7 @@ export const ChatListScreen = ({ navigation }) => {
     }
   };
 
-  const filteredChats = chats.filter(chat => 
+  const filteredChats = chats.filter(chat =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     chat.message.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -66,15 +84,29 @@ export const ChatListScreen = ({ navigation }) => {
     }, [user])
   );
 
-  // Real-time Background Polling: Refresh chats every 5 seconds
   useEffect(() => {
-    const interval = setInterval(fetchChats, 5000);
-    return () => clearInterval(interval);
+    let timeoutId;
+    let isEffectMounted = true;
+    
+    const pollChats = async () => {
+      if (!isEffectMounted) return;
+      await fetchChats();
+      if (isEffectMounted) {
+        timeoutId = setTimeout(pollChats, 5000);
+      }
+    };
+
+    pollChats();
+
+    return () => {
+      isEffectMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.chatItem} 
+  const renderItem = useCallback(({ item }) => (
+    <TouchableOpacity
+      style={styles.chatItem}
       onPress={() => navigation.navigate('ChatDetail', { userName: item.name, userId: item.partnerId })}
     >
       <View style={styles.avatarContainer}>
@@ -96,7 +128,7 @@ export const ChatListScreen = ({ navigation }) => {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), [navigation]);
 
   return (
     <View style={styles.container}>
@@ -116,9 +148,9 @@ export const ChatListScreen = ({ navigation }) => {
         <View style={styles.searchSection}>
           <View style={styles.searchBar}>
             <Ionicons name="search-outline" size={20} color={COLORS.gray} />
-            <TextInput 
-              placeholder="Search your conversations..." 
-              style={styles.searchInput} 
+            <TextInput
+              placeholder="Search your conversations..."
+              style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholderTextColor={COLORS.gray}
@@ -138,6 +170,8 @@ export const ChatListScreen = ({ navigation }) => {
           renderItem={renderItem}
           keyExtractor={item => item.name}
           contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="chatbubbles-outline" size={60} color={COLORS.lightGray} />
@@ -152,16 +186,16 @@ export const ChatListScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  header: { 
-    paddingTop: 60, 
-    paddingHorizontal: 20, 
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
     paddingBottom: 25,
-    borderBottomLeftRadius: 24, 
+    borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24
   },
   headerTop: {
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20
   },
@@ -178,18 +212,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1
   },
-  logoText: { 
-    fontSize: 28, 
+  logoText: {
+    fontSize: 28,
     color: '#FFFFFF',
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
   searchSection: { paddingTop: 5, paddingBottom: 10 },
-  searchBar: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: COLORS.white, 
-    borderRadius: 25, 
-    paddingHorizontal: 15, 
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 25,
+    paddingHorizontal: 15,
     height: 50,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -199,10 +233,10 @@ const styles = StyleSheet.create({
   },
   searchInput: { marginLeft: 10, flex: 1, fontSize: 15, color: COLORS.black },
   list: { paddingBottom: 100, paddingTop: 10 },
-  chatItem: { 
-    flexDirection: 'row', 
+  chatItem: {
+    flexDirection: 'row',
     backgroundColor: COLORS.white,
-    padding: 16, 
+    padding: 16,
     borderRadius: 16,
     marginHorizontal: 20,
     marginBottom: 12,

@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ActivityIndicator, View, Text } from 'react-native';
 import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans';
@@ -8,6 +9,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { MarketProvider } from './src/context/MarketContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
@@ -55,16 +57,20 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ErrorBoundary>
-        <AuthProvider>
-          <ThemeProvider>
-            <MarketProvider>
-              <AppNavigator />
-            </MarketProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ErrorBoundary>
+          <StripeProvider publishableKey="pk_test_51TiVRQJIXqLIAfFEnsnIf8CqilutCvqlpErXmM1wtUWOI3ujxDupXN75d9gHO7CfUX84C2FrxMRBu0SmejKGpzeg009ZNQpr9z">
+            <AuthProvider>
+              <ThemeProvider>
+                <MarketProvider>
+                  <AppNavigator />
+                </MarketProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </StripeProvider>
+        </ErrorBoundary>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

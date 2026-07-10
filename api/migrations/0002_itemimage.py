@@ -1,5 +1,3 @@
-# Migration 0002: Item gallery support.
-
 import django.db.models.deletion
 from django.db import migrations, models
 

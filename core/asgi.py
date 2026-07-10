@@ -1,5 +1,7 @@
-# asgi.py
-# ASGI configuration for the MyPreLove project.
+"""
+ASGI config for the marketplace project.
+Exposes the ASGI callable as a module-level variable named `application`.
+"""
 
 import os
 from django.core.asgi import get_asgi_application

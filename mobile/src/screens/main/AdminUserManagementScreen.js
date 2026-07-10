@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Platform, Modal, Image } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, Platform, Modal } from 'react-native';
+import AppImage from '../../components/AppImage';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
 import api from '../../api/client';
@@ -7,7 +8,7 @@ import api from '../../api/client';
 export const AdminUserManagementScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
   const [profiles, setProfiles] = useState([]);
-  const [activeTab, setActiveTab] = useState('All'); // 'All' | 'Pending'
+  const [activeTab, setActiveTab] = useState('All');
   const [loading, setLoading] = useState(true);
   const [selectedDoc, setSelectedDoc] = useState(null);
 
@@ -37,9 +38,9 @@ export const AdminUserManagementScreen = ({ navigation }) => {
       `Are you sure you want to remove ${username}? This action is permanent.`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive", 
+        {
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               await api.delete(`users/${userId}/`);
@@ -75,18 +76,57 @@ export const AdminUserManagementScreen = ({ navigation }) => {
     }
   };
 
+  const handleSuspend = (userId, username) => {
+    Alert.alert(
+      "Suspend Account",
+      `Are you sure you want to suspend ${username}? They will be unable to log in.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Suspend",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.post(`profiles/${userId}/suspend/`, { reason: 'Suspended by admin.' });
+              Alert.alert("Suspended", `${username} has been suspended.`);
+              fetchData();
+            } catch (err) {
+              Alert.alert("Error", "Could not suspend user.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUnsuspend = async (userId, username) => {
+    try {
+      await api.post(`profiles/${userId}/unsuspend/`);
+      Alert.alert("Reinstated", `${username}'s account has been restored.`);
+      fetchData();
+    } catch (err) {
+      Alert.alert("Error", "Could not unsuspend user.");
+    }
+  };
+
   const pendingProfiles = profiles.filter(p => p.verification_document && !p.is_verified);
 
   const renderItem = ({ item }) => {
     if (activeTab === 'All') {
       const profile = profiles.find(p => p.user === item.id);
+      const isSuspended = !item.is_active;
       return (
-        <View style={styles.userCard}>
+        <View style={[styles.userCard, isSuspended && { opacity: 0.7, borderLeftWidth: 3, borderLeftColor: '#EF4444' }]}>
           <View style={styles.userInfo}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
               <Text style={styles.username}>{item.username}</Text>
               {profile?.is_verified && (
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} style={{ marginLeft: 5 }} />
+                <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+              )}
+              {isSuspended && (
+                <View style={styles.suspendedBadge}>
+                  <Text style={styles.suspendedBadgeText}>SUSPENDED</Text>
+                </View>
               )}
             </View>
             <Text style={styles.email}>{item.email}</Text>
@@ -95,9 +135,15 @@ export const AdminUserManagementScreen = ({ navigation }) => {
             )}
           </View>
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert("Admin Info", "Editing users is done via Django Admin.")}>
-              <Ionicons name="create-outline" size={20} color={COLORS.primary} />
-            </TouchableOpacity>
+            {isSuspended ? (
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleUnsuspend(item.id, item.username)}>
+                <Ionicons name="lock-open-outline" size={20} color="#10B981" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleSuspend(item.id, item.username)}>
+                <Ionicons name="ban-outline" size={20} color="#F59E0B" />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.actionBtn} onPress={() => deleteUser(item.id, item.username)}>
               <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
             </TouchableOpacity>
@@ -120,14 +166,14 @@ export const AdminUserManagementScreen = ({ navigation }) => {
             )}
           </View>
           <View style={styles.pendingActions}>
-            <TouchableOpacity 
-              style={[styles.verifyBtn, styles.approveBtn]} 
+            <TouchableOpacity
+              style={[styles.verifyBtn, styles.approveBtn]}
               onPress={() => handleApprove(item.user, item.username)}
             >
               <Text style={styles.verifyBtnText}>Approve</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.verifyBtn, styles.rejectBtn]} 
+            <TouchableOpacity
+              style={[styles.verifyBtn, styles.rejectBtn]}
               onPress={() => handleReject(item.user, item.username)}
             >
               <Text style={styles.verifyBtnText}>Reject</Text>
@@ -149,9 +195,9 @@ export const AdminUserManagementScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>User Management</Text>
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'All' && styles.activeTab]}
           onPress={() => setActiveTab('All')}
         >
@@ -159,7 +205,7 @@ export const AdminUserManagementScreen = ({ navigation }) => {
             All Users ({users.length})
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'Pending' && styles.activeTab]}
           onPress={() => setActiveTab('Pending')}
         >
@@ -182,20 +228,20 @@ export const AdminUserManagementScreen = ({ navigation }) => {
         }
       />
 
-      {/* Document Viewer Modal */}
+      {}
       <Modal visible={!!selectedDoc} transparent animationType="fade">
         <View style={styles.docModalOverlay}>
           <View style={styles.docModalContent}>
             <Text style={styles.docModalTitle}>Verification ID Document</Text>
             {selectedDoc && (
-              <Image 
-                source={{ uri: selectedDoc }} 
-                style={styles.docModalImage} 
-                resizeMode="contain" 
+              <AppImage
+                source={{ uri: selectedDoc }}
+                style={styles.docModalImage}
+                resizeMode="contain"
               />
             )}
-            <TouchableOpacity 
-              style={styles.closeDocModalBtn} 
+            <TouchableOpacity
+              style={styles.closeDocModalBtn}
               onPress={() => setSelectedDoc(null)}
             >
               <Text style={styles.closeDocModalText}>Close Preview</Text>
@@ -210,19 +256,19 @@ export const AdminUserManagementScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    paddingTop: 60, 
-    paddingBottom: 15, 
-    paddingHorizontal: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  header: {
+    paddingTop: 60,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.background
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: '600', 
-    marginLeft: 15, 
-    flex: 1, 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 15,
+    flex: 1,
     color: COLORS.black,
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
@@ -251,13 +297,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary
   },
   list: { padding: 20 },
-  userCard: { 
-    backgroundColor: COLORS.white, 
-    padding: 16, 
-    borderRadius: 16, 
-    marginBottom: 12, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  userCard: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -269,6 +315,8 @@ const styles = StyleSheet.create({
   username: { fontSize: 16, fontWeight: 'bold', color: COLORS.black },
   email: { fontSize: 13, color: COLORS.gray, marginTop: 2 },
   trustScoreText: { fontSize: 12, color: COLORS.primary, fontWeight: '600', marginTop: 4 },
+  suspendedBadge: { backgroundColor: '#FEE2E2', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  suspendedBadgeText: { fontSize: 9, fontWeight: '800', color: '#EF4444', letterSpacing: 0.5 },
   viewDocBtn: {
     flexDirection: 'row',
     alignItems: 'center',

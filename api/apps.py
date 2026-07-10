@@ -1,6 +1,6 @@
-# apps.py
-# Application configuration for the API app.
-
+"""
+Configures the Django application settings and registers app-level signals.
+"""
 from django.apps import AppConfig
 
 class ApiConfig(AppConfig):
@@ -8,4 +8,5 @@ class ApiConfig(AppConfig):
     name = 'api'
 
     def ready(self):
+        # Register signals receivers upon application startup
         import api.signals

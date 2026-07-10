@@ -1,5 +1,7 @@
-# wsgi.py
-# WSGI configuration for the MyPreLove project.
+"""
+WSGI config for the marketplace project.
+Exposes the WSGI callable as a module-level variable named `application`.
+"""
 
 import os
 from django.core.wsgi import get_wsgi_application

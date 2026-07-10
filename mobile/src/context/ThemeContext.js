@@ -1,69 +1,33 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COLORS } from '../utils/constants';
-
-// Define dark color palette
-export const DARK_COLORS = {
-  primary: '#85F8B2',    // Light mint/forest green for dark mode primary
-  secondary: '#FFB49C',  // Light coral
-  success: '#81D89D',
-  warning: '#FBBF24',
-  danger: '#FFB4AB',
-  eco: '#132B1E',        // Dark soft mint green background
-  ecoText: '#A7F3D0',
-  gray: '#8C938B',
-  lightGray: '#252926',  // Darker container surface
-  white: '#1A1E1B',      // Card surfaces in dark mode
-  black: '#E1E3DF',      // On-surface / Off-white text
-  background: '#111412', // Very dark forest/charcoal background
-};
+import { createContext, useContext, useCallback, useMemo } from "react";
+import { COLORS } from "../utils/constants";
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [loading, setLoading] = useState(true);
+    // Theme is currently static — isDarkMode is kept as a constant so future
+    // dark-mode support can be added without restructuring the context API.
+    const isDarkMode = false;
 
-  useEffect(() => {
-    // Load persisted theme preference on app start
-    const loadTheme = async () => {
-      try {
-        const value = await AsyncStorage.getItem('userTheme');
-        if (value === 'dark') {
-          setIsDarkMode(true);
-        }
-      } catch (e) {
-        console.error('Failed to load theme preference', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadTheme();
-  }, []);
+    // Stable reference — avoids re-creating a new function on every render
+    const toggleTheme = useCallback(() => {
+        // TODO: wire up to a useState / AsyncStorage toggle when dark mode is implemented
+    }, []);
 
-  const toggleTheme = async () => {
-    try {
-      const nextTheme = !isDarkMode;
-      setIsDarkMode(nextTheme);
-      await AsyncStorage.setItem('userTheme', nextTheme ? 'dark' : 'light');
-    } catch (e) {
-      console.error('Failed to save theme preference', e);
-    }
-  };
+    // Memoised value object so consumers only re-render when the theme actually changes
+    const value = useMemo(
+        () => ({ isDarkMode, toggleTheme, colors: COLORS }),
+        [isDarkMode, toggleTheme],
+    );
 
-  const colors = isDarkMode ? DARK_COLORS : COLORS;
-
-  return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, colors }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+    return (
+        <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    );
 };
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error("useTheme must be used within a ThemeProvider");
+    }
+    return context;
 };

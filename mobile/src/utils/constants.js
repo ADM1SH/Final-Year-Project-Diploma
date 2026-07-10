@@ -1,22 +1,16 @@
-import { Platform } from 'react-native';
-
-/**
- * Centralized constants for MyPreLove.
- */
-
 export const COLORS = {
-  primary: '#002C13',    // Forest Green (Artisanal Heritage Primary)
-  secondary: '#A73A15',  // Coral/Marigold (Artisanal Heritage Secondary)
-  success: '#306A43',    // Semantic Mint Active (surface-tint)
-  warning: '#CCA72F',    // Warm Gold / Tertiary
-  danger: '#BA1A1A',     // Error Red
-  eco: '#F0FDF4',        // Soft Mint Green
+  primary: '#002C13',
+  secondary: '#A73A15',
+  success: '#306A43',
+  warning: '#CCA72F',
+  danger: '#BA1A1A',
+  eco: '#F0FDF4',
   ecoText: '#065F46',
-  gray: '#717970',       // Outline Gray
-  lightGray: '#F3F4F3',  // Surface Container Low / Creamy light gray
-  white: '#FFFFFF',      // Card Surfaces
-  black: '#1A1C1C',      // On-surface / Off-black
-  background: '#F9F9F8', // Warm Cream Background (Artisanal Heritage Background)
+  gray: '#717970',
+  lightGray: '#F3F4F3',
+  white: '#FFFFFF',
+  black: '#1A1C1C',
+  background: '#F9F9F8',
 };
 
 export const GRADES = {
@@ -27,19 +21,17 @@ export const GRADES = {
 };
 
 const getBaseUrl = () => {
-  // 🚀 PRESENTATION TIP: If using Ngrok, paste your URL here:
-  // e.g. const NGROK_URL = 'https://abc-123.ngrok-free.app';
+
   const NGROK_URL = 'https://unvillainous-shila-hardheadedly.ngrok-free.dev';
   if (NGROK_URL) {
     const url = `${NGROK_URL}/api/`;
-    console.log('🌐 TUNNEL TARGET:', url);
+    if (__DEV__) console.log('🌐 TUNNEL TARGET:', url);
     return url;
   }
 
-  // Fallback to local network IP (requires phone and PC on same Wi-Fi)
-  const MACHINE_IP = '10.122.236.226'; 
+  const MACHINE_IP = '10.122.236.226';
   const url = `http://${MACHINE_IP}:8000/api/`;
-  console.log('🏠 LOCAL TARGET:', url);
+  if (__DEV__) console.log('🏠 LOCAL TARGET:', url);
   return url;
 };
 

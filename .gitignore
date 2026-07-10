@@ -33,6 +33,9 @@ AI_CONTEXT.md
 *.jpeg
 docs/
 
+# Old design-prototype mockups (static HTML/CSS exports, not part of the app)
+MyProloved/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,5 +1,3 @@
-# Migration 0001: Initial setup.
-
 import django.core.validators
 import django.db.models.deletion
 from django.conf import settings

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
@@ -8,7 +8,6 @@ export const AdminDashboardScreen = ({ navigation }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Broadcast States
   const [broadcastModal, setBroadcastModal] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastContent, setBroadcastContent] = useState('');
@@ -99,21 +98,22 @@ export const AdminDashboardScreen = ({ navigation }) => {
             <Text style={styles.controlText}>Marketplace Inventory</Text>
             <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.controlItem} onPress={() => navigation.navigate('AdminTransactions')}>
+            <Ionicons name="swap-horizontal-outline" size={22} color="#8B5CF6" />
+            <Text style={styles.controlText}>Transaction Management</Text>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.controlItem} onPress={() => setBroadcastModal(true)}>
             <Ionicons name="megaphone-outline" size={22} color="#F59E0B" />
             <Text style={styles.controlText}>Broadcast Announcement</Text>
             <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.controlItem} onPress={() => navigation.navigate('MainTabs', { screen: 'Chat' })}>
+          <TouchableOpacity style={[styles.controlItem, { borderBottomWidth: 0 }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Chat' })}>
             <Ionicons name="chatbubbles-outline" size={22} color="#3B82F6" />
             <Text style={styles.controlText}>Monitor Conversations</Text>
             <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.controlItem} onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}>
-            <Ionicons name="list" size={22} color={COLORS.black} />
-            <Text style={styles.controlText}>Manage All Listings</Text>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.gray} />
-          </TouchableOpacity>
+
         </View>
 
         <View style={styles.infoBanner}>
@@ -122,7 +122,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Broadcast Modal for Superadmin */}
+      {}
       <Modal visible={broadcastModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.broadcastModalContent}>
@@ -169,19 +169,19 @@ export const AdminDashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    paddingTop: 60, 
-    paddingBottom: 20, 
-    paddingHorizontal: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.background
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: '600', 
-    marginLeft: 15, 
-    flex: 1, 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 15,
+    flex: 1,
     color: COLORS.black,
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
@@ -201,21 +201,21 @@ const styles = StyleSheet.create({
   badge: { backgroundColor: COLORS.danger, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
   scrollContent: { padding: 20 },
-  sectionTitle: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    marginBottom: 15, 
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 15,
     marginTop: 10,
     color: COLORS.black,
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 20 },
-  statCard: { 
-    width: '48%', 
-    backgroundColor: COLORS.white, 
-    padding: 18, 
-    borderRadius: 16, 
-    marginBottom: 15, 
+  statCard: {
+    width: '48%',
+    backgroundColor: COLORS.white,
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -225,10 +225,10 @@ const styles = StyleSheet.create({
   iconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   statValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.black },
   statLabel: { fontSize: 12, color: COLORS.gray, marginTop: 4, fontWeight: '600' },
-  controlsList: { 
-    backgroundColor: COLORS.white, 
-    borderRadius: 16, 
-    padding: 8, 
+  controlsList: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 8,
     marginBottom: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
   },
   controlItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.lightGray },
   controlText: { flex: 1, marginLeft: 15, fontSize: 16, fontWeight: '500', color: COLORS.black },
-  infoBanner: { 
-    flexDirection: 'row', 
-    backgroundColor: COLORS.lightGray, 
-    padding: 16, 
-    borderRadius: 16, 
-    alignItems: 'center' 
+  infoBanner: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.lightGray,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center'
   },
   infoText: { flex: 1, marginLeft: 10, fontSize: 12, color: COLORS.gray, lineHeight: 18 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },

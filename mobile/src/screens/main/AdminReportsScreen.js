@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../utils/constants';
@@ -36,8 +36,8 @@ export const AdminReportsScreen = ({ navigation }) => {
       `Mark this report as ${newStatus}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Confirm", 
+        {
+          text: "Confirm",
           onPress: async () => {
             try {
               if (newStatus === 'RESOLVED') {
@@ -98,8 +98,8 @@ export const AdminReportsScreen = ({ navigation }) => {
 
       <View style={styles.actions}>
         {item.status === 'PENDING' && (
-          <TouchableOpacity 
-            style={[styles.actionBtn, { backgroundColor: '#F59E0B' }]} 
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: '#F59E0B' }]}
             onPress={() => updateReportStatus(item.id, 'INVESTIGATING')}
           >
             <Text style={styles.actionBtnText}>Investigate</Text>
@@ -107,14 +107,14 @@ export const AdminReportsScreen = ({ navigation }) => {
         )}
         {(item.status === 'PENDING' || item.status === 'INVESTIGATING') && (
           <>
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#10B981' }]} 
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: '#10B981' }]}
               onPress={() => updateReportStatus(item.id, 'RESOLVED')}
             >
               <Text style={styles.actionBtnText}>Resolve</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: COLORS.gray }]} 
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: COLORS.gray }]}
               onPress={() => updateReportStatus(item.id, 'DISMISSED')}
             >
               <Text style={styles.actionBtnText}>Dismiss</Text>
@@ -136,7 +136,7 @@ export const AdminReportsScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>User Reports</Text>
         <View style={styles.badge}><Text style={styles.badgeText}>{reports.length}</Text></View>
       </View>
-      
+
       <FlatList
         data={reports}
         renderItem={renderItem}
@@ -157,30 +157,30 @@ export const AdminReportsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    paddingTop: 60, 
-    paddingBottom: 20, 
-    paddingHorizontal: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.background
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: '600', 
-    marginLeft: 15, 
-    flex: 1, 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 15,
+    flex: 1,
     color: COLORS.black,
     fontFamily: Platform.OS === 'ios' ? 'Playfair Display' : 'serif'
   },
   badge: { backgroundColor: COLORS.danger, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   badgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   list: { padding: 15 },
-  reportCard: { 
-    backgroundColor: COLORS.white, 
-    padding: 20, 
-    borderRadius: 16, 
-    marginBottom: 15, 
+  reportCard: {
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,

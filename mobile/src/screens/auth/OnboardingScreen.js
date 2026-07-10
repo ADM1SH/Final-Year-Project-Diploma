@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated, TouchableOpacity, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,21 +60,18 @@ export const OnboardingScreen = ({ navigation }) => {
       (index + 1) * width
     ];
 
-    // Scale animation for icon
     const scale = scrollX.interpolate({
       inputRange,
       outputRange: [0.3, 1, 0.3],
       extrapolate: 'clamp'
     });
 
-    // Rotation animation
     const rotate = scrollX.interpolate({
       inputRange,
       outputRange: ['-30deg', '0deg', '30deg'],
       extrapolate: 'clamp'
     });
 
-    // Opacity animation for text
     const opacity = scrollX.interpolate({
       inputRange,
       outputRange: [0, 1, 0],
@@ -84,10 +81,10 @@ export const OnboardingScreen = ({ navigation }) => {
     return (
       <View style={styles.slide}>
         <Animated.View style={[
-          styles.iconContainer, 
-          { 
+          styles.iconContainer,
+          {
             backgroundColor: item.color + '15',
-            transform: [{ scale }, { rotate }] 
+            transform: [{ scale }, { rotate }]
           }
         ]}>
           <Ionicons name={item.icon} size={100} color={item.color} />
@@ -115,7 +112,7 @@ export const OnboardingScreen = ({ navigation }) => {
         showsHorizontalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { 
+          {
             useNativeDriver: false,
             listener: (event) => {
               const slideSize = event.nativeEvent.layoutMeasurement.width;
@@ -129,7 +126,7 @@ export const OnboardingScreen = ({ navigation }) => {
       />
 
       <View style={styles.footer}>
-        {/* Pagination Dots */}
+        {}
         <View style={styles.dotsContainer}>
           {SLIDES.map((_, index) => {
             const inputRange = [
@@ -137,7 +134,7 @@ export const OnboardingScreen = ({ navigation }) => {
               index * width,
               (index + 1) * width
             ];
-            
+
             const dotWidth = scrollX.interpolate({
               inputRange,
               outputRange: [8, 20, 8],
@@ -162,16 +159,16 @@ export const OnboardingScreen = ({ navigation }) => {
           })}
         </View>
 
-        {/* Action Button */}
+        {}
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>
             {activeIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
           </Text>
-          <Ionicons 
-            name={activeIndex === SLIDES.length - 1 ? 'checkmark-circle' : 'arrow-forward-outline'} 
-            size={18} 
-            color="white" 
-            style={{ marginLeft: 6 }} 
+          <Ionicons
+            name={activeIndex === SLIDES.length - 1 ? 'checkmark-circle' : 'arrow-forward-outline'}
+            size={18}
+            color="white"
+            style={{ marginLeft: 6 }}
           />
         </TouchableOpacity>
       </View>

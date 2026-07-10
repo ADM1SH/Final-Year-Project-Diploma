@@ -1,221 +1,189 @@
-# MyPreLove: Secondhand Marketplace Backend API
+# MyPreLove: Eco-Conscious Secondhand Marketplace
 
 ## Project Overview
-**MyPreLove** is a secure, trust-focused secondhand marketplace designed for mobile users (Android). The project aims to eliminate fraud and subjective condition grading that are prevalent in current platforms like Carousell and Facebook Marketplace.
+**MyPreLove** is a secure, trust-focused secondhand marketplace mobile app. It aims to eliminate fraud and subjective condition grading that are prevalent in platforms like Carousell and Facebook Marketplace, with an objective A-D grading system, an escrow-style Stripe payment flow, and an automated trust score.
 
-This repository holds the **Django 6 REST API Backend** serving the mobile client. It has been built with optimized, professional-grade Python code adhering to strict relational database design and API standards.
+This repository holds both halves of the project:
+- **`api/` + `core/`** — a Django 6 REST API backend (JWT auth, SQLite in dev).
+- **`mobile/`** — a React Native / Expo client.
+
+Core product loop: browse/list items → chat and negotiate (offer/counter-offer) → buyer pays via Stripe (held in escrow) → buyer confirms receipt → funds released to seller → review left.
 
 ---
 
-## 💻 Local Setup & Installation Instructions
+## 1) Prerequisites
 
-Follow these steps to set up the environment on your local machine.
+Install these before you start, on either OS:
 
-### 1. Prerequisites
-Ensure you have the following installed:
-- **Python 3.10 or higher** (Download from [python.org](https://www.python.org/downloads/))
+- **Python 3.12 or newer** — Django 6 requires it. ([python.org/downloads](https://www.python.org/downloads/))
+- **Node.js 20 LTS or newer** (includes `npm`) — required by Expo SDK 54 / React Native 0.81. ([nodejs.org](https://nodejs.org/))
 - **Git**
+- **Expo Go** app on your phone — [iOS](https://apps.apple.com/app/expo-go/id982107779) / [Android](https://play.google.com/store/apps/details?id=host.exp.exponent) — the easiest way to run the mobile client without a simulator.
+- **ngrok** (optional but recommended) — [ngrok.com/download](https://ngrok.com/download). The project is set up to reach the backend through a tunnel so your phone doesn't need to be on the same Wi-Fi as your computer. See [Networking](#4-networking-phone--backend) below for the no-ngrok alternative.
+- **Stripe account** (free) — [dashboard.stripe.com/register](https://dashboard.stripe.com/register) — for test-mode API keys. Payments won't work without these, everything else will.
 
-### 2. Clone the Repository
+---
+
+## 2) Clone & configure environment variables
+
 ```bash
 git clone <your-repo-link>
-cd Final-Year-Project-Diploma
+cd FYP
 ```
 
-### 3. Create a Virtual Environment
-This keeps the project dependencies isolated from your system.
+Both the backend and mobile app read secrets from a single `.env` file at the project root (git-ignored — never commit it).
 
-**For macOS / Linux:**
+```bash
+cp .env.example .env        # macOS/Linux
+copy .env.example .env      # Windows
+```
+
+Open `.env` and fill in:
+- `DJANGO_SECRET_KEY` — any long random string. Generate one:
+  ```bash
+  python -c "import secrets,string; print(''.join(secrets.choice(string.ascii_letters+string.digits+'!@#$%^&*(-_=+)') for _ in range(50)))"
+  ```
+- `STRIPE_PUBLIC_KEY` / `STRIPE_SECRET_KEY` — from your Stripe dashboard's [test-mode API keys page](https://dashboard.stripe.com/test/apikeys).
+- Everything else has a sensible local-dev default already filled in.
+
+**Without a real `DJANGO_SECRET_KEY` in `.env`, the server falls back to an insecure fixed key on every restart** — if that key ever changes, every logged-in session on every device breaks with `401 Unauthorized` and everyone has to log in again. Set it once and leave it alone.
+
+---
+
+## 3) Backend setup (Django)
+
+### macOS / Linux
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-```
-
-**For Windows (PowerShell):**
-```bash
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
-
-**For Windows (Command Prompt):**
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-### 4. Install Required Packages
-Run this command to install all necessary libraries (Django, REST Framework, Pillow for images, etc.):
-```bash
 pip install -r requirements.txt
-```
-
-### 5. Database Setup (Migrations)
-Apply the database schema to your local SQLite database:
-```bash
 python manage.py migrate
-```
-
-### 6. Create an Admin Account
-Create a "Superuser" to access the web-based management dashboard:
-```bash
-python manage.py createsuperuser
-```
-
-### 7. Start the Development Server
-```bash
-python manage.py runserver
-```
-The API will be live at: `http://127.0.0.1:8000/api/`
-The Admin Dashboard will be at: `http://127.0.0.1:8000/admin/`
-
----
-
-## 🛠️ Major Project Enhancements
-
-The following professional upgrades have been implemented for this final version:
-
-1.  **ABI Trust Model:** Fully automated algorithm calculating seller reputation based on **Integrity** (Verification), **Ability** (Completed Sales), and **Benevolence** (Buyer Ratings).
-2.  **Scientific Eco-Logic:** Transitioned from price-based estimation to **Weight-Based Carbon Calculation** (Weight × 2.5kg CO2 saved), requiring physical weight input for all listings.
-3.  **Real-Time Architecture:** Integrated **Django Signals** and **Frontend Polling** for instant notifications, chat updates, and red tab-bar badges.
-4.  **UI/UX Standardization:** Synchronized item grid layouts across all screens, implemented high-contrast "Negotiable" indicators, and added Grade-specific color branding (A-D).
-5.  **Performance Optimization:** Implemented **FlatList Windowing** and **Hardware Acceleration** to ensure smooth scrolling even with 1,000+ items.
-
----
-
-## 🚀 Presentation Setup (Bulletproof Connection)
-
-Follow these steps exactly on your presentation day to ensure your phone can talk to your laptop, regardless of the Wi-Fi network.
-
-### 1. Start the Backend
-In your terminal, navigate to the project root and run:
-```bash
-source venv/bin/activate
+python manage.py createsuperuser   # optional — admin dashboard access
 python manage.py runserver 0.0.0.0:8000
 ```
 
-### 2. Start the Ngrok Tunnel
-In a **new terminal**, run:
+### Windows (PowerShell)
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser   # optional — admin dashboard access
+python manage.py runserver 0.0.0.0:8000
+```
+> If PowerShell refuses to run the activation script (`running scripts is disabled on this system`), run this once per machine: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
+
+### Windows (Command Prompt)
+```cmd
+python -m venv venv
+venv\Scripts\activate.bat
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver 0.0.0.0:8000
+```
+
+Once running:
+- API: `http://127.0.0.1:8000/api/`
+- Admin dashboard: `http://127.0.0.1:8000/admin/`
+
+---
+
+## 4) Networking (phone ↔ backend)
+
+The mobile app needs a URL it can actually reach from your phone. `mobile/src/utils/constants.js` currently hardcodes an ngrok tunnel URL (`NGROK_URL`) and always uses it — the local-IP fallback further down that file is dead code as long as `NGROK_URL` is set to a non-empty string.
+
+**Option A — ngrok tunnel (recommended, works over cellular data too):**
 ```bash
 ngrok http 8000
 ```
-- Copy the **Forwarding** URL (e.g., `https://abcd-123.ngrok-free.app`).
+Copy the `https://...ngrok-free.app` forwarding URL it prints, then paste it into the `NGROK_URL` constant in `mobile/src/utils/constants.js`. A free ngrok account gives you a new random URL every time you restart the tunnel, so you'll need to update this constant each session unless you reserve a static domain on your ngrok account (the project's `start.sh` assumes a reserved static domain — see below).
 
-### 3. Update the App Code
-Open `mobile/src/utils/constants.js` and paste your URL into the `NGROK_URL` variable:
-```javascript
-const NGROK_URL = 'https://abcd-123.ngrok-free.app'; // <--- PASTE YOUR URL HERE
+**Option B — same Wi-Fi, no tunnel:**
+Comment out or delete the `NGROK_URL` line in `mobile/src/utils/constants.js` so the code falls through to the `MACHINE_IP` branch, then set `MACHINE_IP` to your computer's local network IP (`ipconfig` on Windows, `ifconfig`/`ipconfig getifaddr en0` on macOS). Your phone must be on the same Wi-Fi network.
+
+**One-command startup (macOS/Linux only):** `start.sh` runs Django + a static-domain ngrok tunnel + Expo together and shuts all three down on `Ctrl+C`:
+```bash
+chmod +x start.sh   # one-time
+./start.sh
 ```
+This requires a **reserved ngrok static domain** matching the `NGROK_DOMAIN` variable inside `start.sh` and the `NGROK_URL` constant in `constants.js` — it's tied to whoever set up this project's ngrok account. If you don't have access to that reserved domain, use Option A or B above instead, or edit `NGROK_DOMAIN`/`NGROK_URL` to your own. `start.sh` is a bash script — on Windows, run it via WSL or Git Bash, or just follow the manual steps in this guide instead.
 
-### 4. Start the Mobile Client
-In another terminal, run:
+---
+
+## 5) Mobile app setup (Expo)
+
 ```bash
 cd mobile
+npm install
 npx expo start
 ```
-- Scan the QR code with your phone. **Success!** Your app is now connected via a secure internet tunnel.
+
+Same commands on Windows and macOS — Expo/Node tooling doesn't differ by OS here.
+
+Then, with your phone on the network config from step 4 and Expo Go installed:
+- **Android:** open Expo Go → "Scan QR Code".
+- **iOS:** scan the QR code with the system Camera app.
+
+---
+
+## 6) Quick start checklist (after first-time setup above)
+
+1. `source venv/bin/activate` (macOS/Linux) or `.\venv\Scripts\Activate.ps1` (Windows), then `python manage.py runserver 0.0.0.0:8000`
+2. Start your tunnel (`ngrok http 8000`, or skip if using same-Wi-Fi/local IP)
+3. `cd mobile && npx expo start`
+4. Scan the QR code in Expo Go
 
 ---
 
 ## 🔑 Demo Credentials
 
-Use these accounts to explore the prototype features.
+Accounts that currently exist in the dev database (`db.sqlite3`) for exploring the prototype. Password is `password123` for all of them unless you've changed it locally.
 
-### 🛡️ Admin Account
-| Username | Password | Role |
-| :--- | :--- | :--- |
-| **`superadmin`** | `password123` | Platform Superuser (Access to Control Center) |
-
-### 👥 User Personas
-| Username | Password | Role / Seller Focus |
-| :--- | :--- | :--- |
-| **`adamanwar`** | `password123` | Primary User (Buyer/Seller) |
-| **`ahmadzaki`** | `password123` | Seller (Vintage Satchels) |
-| **`farhanrosli`** | `password123` | Seller (Tech & Cameras) |
-| **`sitiaminah`** | `password123` | Seller (Luxury & Designer) |
-| **`nurulizzah`** | `password123` | Seller (Fashion & Denim) |
-| **`adamali`** | `password123` | Seller (General Items) |
+| Username | Role |
+| :--- | :--- |
+| **`superadmin`** | Platform superuser — Django admin dashboard access |
+| **`adamanwar`** | Primary user (buyer/seller) |
+| **`ahmadzaki`** | Seller — vintage satchels |
+| **`farhanrosli`** | Seller — tech & cameras |
+| **`sitiaminah`** | Seller — luxury & designer |
+| **`nurulizzah`** | Seller — fashion & denim |
 
 ---
 
-## 🚀 Quick Start Checklist
-1. **Start Backend:** `python manage.py runserver 0.0.0.0:8000`
-2. **Start Mobile:** `npx expo start`
-3. **Reset Data:** Run `python seed.py` to restore categories and default admin if needed.
+## 🛠️ Major Project Features
+
+1. **ABI Trust Model** — automated seller reputation score from **Integrity** (verification), **Ability** (completed sales), and **Benevolence** (buyer ratings), recalculated via Django signals.
+2. **Weight-Based Carbon Calculation** — CO2-saved estimate per listing computed from weight (kg × 2.5), not price.
+3. **Escrow Payments** — Stripe payment is held after checkout and only transferred to the seller once the buyer confirms receipt (`api/tests_concurrency.py` covers the double-payout race on this path).
+4. **Objective A-D Grading** — condition survey (functionality, cosmetic, completeness) auto-calculates a grade on save, rather than a free-text seller claim.
+5. **Real-Time-ish UX** — Django signals + frontend polling drive notification badges and chat updates without a websocket layer.
+6. **Recovery-word password reset** — instead of email, `PasswordResetRequestView`/`PasswordResetVerifyView` challenge the user with 3 of their 9 saved recovery words.
 
 ---
 
-## 📱 Mobile Client Setup (Expo Go)
+## 📡 API Reference
 
-The mobile application is built with React Native and Expo. Follow these steps to run it on your physical device.
+Base URL: `http://127.0.0.1:8000/api/` (or your ngrok tunnel + `/api/`)
 
-### 1. Prerequisites
-- **Node.js (LTS)** installed on your computer.
-- **Expo Go** app installed on your [iOS](https://apps.apple.com/app/expo-go/id982107779) or [Android](https://play.google.com/store/apps/details?id=host.exp.exponent) device.
+**Auth**
+- `POST /register/`, `POST /login/` — returns a JWT access + refresh token pair.
+- `POST /token/refresh/` — exchange a refresh token for a new access token (rotates and blacklists the old refresh token).
+- `POST /logout/` — blacklists the current refresh token.
+- `POST /change-password/` — authenticated password change.
+- `POST /password-reset/request/`, `POST /password-reset/verify/` — 3-of-9 recovery-word reset flow.
+- `POST /password-reset/direct/` — **DEBUG-only** username-only reset bypass; not registered in the URLconf when `DJANGO_DEBUG=False`.
 
-### 2. Configure Backend IP
-Ensure the mobile app can reach your backend. Open `mobile/src/utils/constants.js` and update `BASE_URL` with your computer's local IP address:
-```javascript
-export const API_CONFIG = {
-  BASE_URL: 'http://<YOUR_LOCAL_IP>:8000/api/',
-};
-```
-
-### 3. Install Dependencies
-```bash
-cd mobile
-npm install
-```
-
-### 4. Start Expo Server
-```bash
-npx expo start
-```
-
-### 5. Launch on Device
-1. Connect your phone to the **same Wi-Fi network** as your computer.
-2. Scan the QR code displayed in the terminal:
-   - **Android:** Use the "Scan QR Code" feature in the Expo Go app.
-   - **iOS:** Use the system Camera app.
+**Core resources** (standard `ModelViewSet` REST verbs unless noted)
+- `/categories/`, `/profiles/`, `/users/`
+- `/items/` — filters: `?category=1`, `?calculated_grade=A`, `?min_price=10`, `?search=phone`
+- `/items/suggest_price/` — heuristic price suggestion (authenticated)
+- `/transactions/` — escrow-style Stripe payment lifecycle
+- `/messages/` — buyer/seller chat, including offers & counter-offers
+- `/notifications/` — read-only; badge counts and chat/offer alerts
+- `/favorites/`, `/bundles/`, `/price-alerts/`, `/blocks/`
+- `/scam-reports/`, `/reviews/`
 
 ---
-
-## 🛠️ Core Features & Optimizations (Developer Notes)
-
-### 1. Robust Relational Database & Logic
-*   **Indexing:** Frequent search fields (`name`, `calculated_grade`, `is_sold`) are indexed for O(1) or O(log n) lookup speeds.
-*   **Grading Calculator:** Implemented an objective, point-based system that auto-assigns Grades A-D based on a condition survey (Functionality, Cosmetic, Completeness).
-*   **Gallery Support:** Implemented `ItemImage` model allowing multiple high-resolution photos per listing.
-*   **Data Integrity:** Uses Django `TextChoices` for Grading (A-D) and auto-calculates grades on every save.
-
-### 2. Security & Trust (ABI Model)
-*   **Token Authentication:** Full `/api/register/` and `/api/login/` flow implemented for secure mobile session management.
-*   **ABI Trust Algorithm:** Implemented automated `trust_score` calculation using Django Signals.
-    *   **Ability:** Score increases with every completed sale.
-    *   **Benevolence:** Score scales with the average rating from buyer reviews.
-    *   **Integrity:** Verified status provides an immediate trust boost.
-*   **Profile Extension:** Links strictly to Django's Auth system. Tracks verification status and trust scores.
-*   **Transaction-Locked Reviews:** Reviews are 1-to-1 with Items, meaning a user can only leave a review after a specific transaction is recognized.
-
-### 3. API Performance & Discovery
-*   **Query Optimization:** All endpoints use `.select_related()` and `.prefetch_related()` (for images) to fetch all required data in a single SQL query, completely eliminating N+1 performance bottlenecks.
-*   **Advanced Filtering:** Integrated `django-filter` to allow the mobile app to query items by `category`, `price`, and `calculated_grade`.
-*   **Search & Ordering:** Full-text search on item names/descriptions and flexible ordering by price or date.
-*   **CORS Support:** Pre-configured to allow Android Studio emulators and physical devices to connect seamlessly.
-
----
-
-## 📡 API Documentation (Available Endpoints)
-Base URL: `http://127.0.0.1:8000/api/`
-
-*   **`POST /register/`**: Create a new account and receive an auth token.
-*   **`POST /login/`**: Authenticate and receive an auth token.
-*   **`GET, POST /categories/`**: List and create item categories.
-*   **`GET, PUT /profiles/`**: User trust scores and verification statuses.
-*   **`GET, POST, PUT /items/`**: Marketplace listings with gallery support.
-    *   *Filters available:* `?category=1`, `?calculated_grade=A`, `?min_price=10`, `?search=phone`
-*   **`GET, POST, PATCH /transactions/`**: Track sales between buyers and sellers.
-*   **`GET, POST /messages/`**: Secure in-app chat between buyers and sellers.
-*   **`GET, POST /scam-reports/`**: Flag suspicious listings or fraudulent behavior.
-*   **`GET, POST /reviews/`**: Transaction-based feedback.
 
 *Project submitted to the Faculty of Computing and Informatics, Multimedia University (CPT4212).*

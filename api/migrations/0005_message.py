@@ -1,5 +1,3 @@
-# Migration 0005: Messaging.
-
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models

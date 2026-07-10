@@ -14,4 +14,27 @@ export const AuthService = {
     });
     return response.data;
   },
+  logout: async (refreshToken) => {
+    const response = await api.post('logout/', { refresh_token: refreshToken });
+    return response.data;
+  },
+  resetPasswordDirect: async (username, newPassword) => {
+    const response = await api.post('password-reset/direct/', {
+      username,
+      new_password: newPassword
+    });
+    return response.data;
+  },
+  requestPasswordReset: async (username) => {
+    const response = await api.post('password-reset/request/', { username });
+    return response.data;
+  },
+  verifyPasswordReset: async (token, words, newPassword) => {
+    const response = await api.post('password-reset/verify/', {
+      token,
+      words,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
 };
